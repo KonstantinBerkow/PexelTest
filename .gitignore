@@ -21,7 +21,7 @@ output.json
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
-
+it status
 # Keystore files
 *.jks
 *.keystore

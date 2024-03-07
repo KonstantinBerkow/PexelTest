@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.material)
 
     implementation(libs.glide)
+    implementation(libs.gson)
     implementation(libs.retrofit)
 
     testImplementation(libs.junit)

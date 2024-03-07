@@ -5,12 +5,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
-import java.io.Closeable
 
 private const val TAG = "CuratedPhotosFragment"
 
@@ -24,18 +23,12 @@ class CuratedPhotosFragment : Fragment() {
         super.onCreate(savedInstanceState)
         adapter = PhotosAdapter(
             onPhotoClicked = ::navigate,
-            loadImage = ::loadImage
+            imageLoader = Glide.with(this)
         )
     }
 
     private fun navigate(photo: PexelPhotoItem) {
         Log.d(TAG, "Open detail page: $photo")
-    }
-
-    private fun loadImage(url: String, into: ImageView): Closeable {
-        Log.d(TAG, "load image: $url")
-        into.setImageResource(R.mipmap.ic_launcher)
-        return Closeables.EMPTY
     }
 
     override fun onCreateView(

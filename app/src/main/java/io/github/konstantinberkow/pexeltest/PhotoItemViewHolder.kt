@@ -6,13 +6,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.RequestManager
 import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
-import java.io.Closeable
 
 class PhotoItemViewHolder(
     itemView: View,
     onPhotoClicked: (PexelPhotoItem) -> Unit,
-    private val loadImage: (String, ImageView) -> Closeable
+    private val imageLoader: RequestManager
 ) : RecyclerView.ViewHolder(itemView) {
 
     private val cardView: CardView
@@ -20,8 +20,6 @@ class PhotoItemViewHolder(
     private val authorTextView: TextView
 
     private var photo: PexelPhotoItem? = null
-
-    private var latestImageRequest: Closeable? = null
 
     init {
         cardView = itemView as CardView
@@ -39,14 +37,16 @@ class PhotoItemViewHolder(
         cardView.setCardBackgroundColor(Color.parseColor(photo.averageColor))
         authorTextView.text = photo.photographerName
 
-        latestImageRequest?.close()
-        latestImageRequest = loadImage(photo.srcSmall, photoImageView)
+        imageLoader.clear(photoImageView)
+
+        imageLoader.load(photo.srcSmall)
+            .placeholder(R.mipmap.ic_launcher)
+            .into(photoImageView)
     }
 
     fun unbind() {
         photo = null
 
-        latestImageRequest?.close()
-        latestImageRequest = null
+        imageLoader.clear(photoImageView)
     }
 }

@@ -1,18 +1,16 @@
 package io.github.konstantinberkow.pexeltest
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.RequestManager
 import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
-import java.io.Closeable
 
 private const val TAG = "PhotosAdapter"
 
 class PhotosAdapter(
     private val onPhotoClicked: (PexelPhotoItem) -> Unit,
-    private val loadImage: (String, ImageView) -> Closeable
+    private val imageLoader: RequestManager
 ) : RecyclerView.Adapter<PhotoItemViewHolder>() {
 
     private var photos: MutableList<PexelPhotoItem> = mutableListOf()
@@ -37,7 +35,7 @@ class PhotosAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoItemViewHolder {
         val inflater = getLayoutInflater(parent)
         val itemView = inflater.inflate(R.layout.photo_item_view, parent, false)
-        return PhotoItemViewHolder(itemView, onPhotoClicked, loadImage)
+        return PhotoItemViewHolder(itemView, onPhotoClicked, imageLoader)
     }
 
     override fun onBindViewHolder(holder: PhotoItemViewHolder, position: Int) {

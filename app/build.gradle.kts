@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.material)
 
     implementation(libs.glide)
+    implementation(libs.retrofit)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

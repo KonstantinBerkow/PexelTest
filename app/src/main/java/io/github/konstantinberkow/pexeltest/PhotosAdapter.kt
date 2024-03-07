@@ -2,6 +2,7 @@ package io.github.konstantinberkow.pexeltest
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
 import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
@@ -13,7 +14,7 @@ class PhotosAdapter(
     private val imageLoader: RequestManager
 ) : RecyclerView.Adapter<PhotoItemViewHolder>() {
 
-    private var photos: MutableList<PexelPhotoItem> = mutableListOf()
+    private var photos: List<PexelPhotoItem> = emptyList()
 
     private var cachedInflater: LayoutInflater? = null
 
@@ -55,15 +56,15 @@ class PhotosAdapter(
     }
 
     fun replacePhotos(newPhotos: List<PexelPhotoItem>) {
-        this.photos.clear()
-        this.photos.addAll(newPhotos)
-        this.notifyDataSetChanged()
+        val diff = DiffUtil.calculateDiff(PhotosDiffUtilCallback(photos, newPhotos), false)
+        photos = newPhotos
+        diff.dispatchUpdatesTo(this)
     }
 
     fun addPhotos(newPhotos: List<PexelPhotoItem>) {
         if (newPhotos.isNotEmpty()) {
             val oldListSize = this.photos.size
-            this.photos.addAll(newPhotos)
+            photos = photos + newPhotos
             this.notifyItemRangeInserted(oldListSize, newPhotos.size)
         }
     }

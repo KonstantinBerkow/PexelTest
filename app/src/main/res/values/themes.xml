@@ -12,5 +12,26 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="21">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+
+        <!-- Make elevation shadow more prominent -->
+        <item name="android:ambientShadowAlpha" tools:targetApi="21">.5</item>
+        <item name="android:spotShadowAlpha" tools:targetApi="21">.5</item>
     </style>
+
+    <!-- Remove default ActionBar -->
+    <style name="Theme.PexelTest.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.PexelTest.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.PexelTest.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark" />
+
+    <style name="CardViewStyle" parent="CardView.Light">
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">16dp</item>
+        <item name="cardMaxElevation">24dp</item>
+    </style>
+
 </resources>

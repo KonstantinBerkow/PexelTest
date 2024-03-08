@@ -64,7 +64,17 @@ class CuratedPhotosViewModel(
 
     fun refresh() {
         val currentState = state.value ?: return
-        // add code
+        Log.d(TAG, "perform refresh, current state: $currentState")
+
+        val transientState = CuratedPhotosState(
+            loadedPhotos = emptyList(),
+            currentPage = 0,
+            hasMore = true,
+            status = CuratedPhotosState.Status.IDLE
+        )
+        state.value = transientState
+
+        performLoad(transientState)
     }
 
     private fun performLoad(currentState: CuratedPhotosState) {
@@ -90,7 +100,7 @@ class CuratedPhotosViewModel(
                 response.body()?.let { body ->
                     val newState = transientState.copy(
                         currentPage = body.page,
-                        loadedPhotos = body.photos.map(ToViewPhoto),
+                        loadedPhotos = transientState.loadedPhotos + body.photos.map(ToViewPhoto),
                         status = CuratedPhotosState.Status.IDLE
                     )
                     state.postValue(newState)

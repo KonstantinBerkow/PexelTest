@@ -11,6 +11,7 @@ glide = "4.16.0"
 gson = "2.10.1"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
+swiperefresh = "1.2.0-alpha01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -24,6 +25,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofitConverterGson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttpInterceptors = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp"}
+swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

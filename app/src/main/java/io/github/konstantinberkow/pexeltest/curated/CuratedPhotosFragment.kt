@@ -1,4 +1,4 @@
-package io.github.konstantinberkow.pexeltest
+package io.github.konstantinberkow.pexeltest.curated
 
 import android.os.Bundle
 import android.util.Log
@@ -10,16 +10,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosViewModel
-import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosViewModelFactory
-import io.github.konstantinberkow.pexeltest.curated.PhotosAdapter
-import io.github.konstantinberkow.pexeltest.curated.PexelPhotoItem
+import io.github.konstantinberkow.pexeltest.R
+import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
 
 private const val TAG = "CuratedPhotosFragment"
 
 class CuratedPhotosFragment : Fragment() {
 
     private var photosRecyclerView: RecyclerView? = null
+
+    private var loadMoreScrollListener: LoadMoreScrollListener? = null
 
     private var adapter: PhotosAdapter? = null
 
@@ -48,13 +48,23 @@ class CuratedPhotosFragment : Fragment() {
         val layout = inflater.inflate(R.layout.fragment_curated_photos, container, false)
 
         layout.findViewById<RecyclerView>(R.id.photos_recycler_view).also { recyclerView ->
-            recyclerView.setHasFixedSize(true)
-            recyclerView.layoutManager = LinearLayoutManager(
+            val layoutManager = LinearLayoutManager(
                 requireActivity(),
                 LinearLayoutManager.VERTICAL,
                 false
             )
+
+            recyclerView.setHasFixedSize(true)
+            recyclerView.layoutManager = layoutManager
             recyclerView.adapter = adapter
+
+            loadMoreScrollListener = LoadMoreScrollListener(
+                layoutManager = layoutManager,
+                loadThreshold = 5,
+                loadMore = { viewModel.loadMore() }
+            ).also {
+                recyclerView.addOnScrollListener(it)
+            }
 
             photosRecyclerView = recyclerView
         }
@@ -66,15 +76,26 @@ class CuratedPhotosFragment : Fragment() {
         super.onStart()
 
         val recyclerAdapter = adapter ?: return
-        viewModel.observePhotos().observe(this) { viewState ->
-            val newPhotos = viewState.photos
+        val loadMoreListener = loadMoreScrollListener ?: return
 
+        viewModel.observePhotos().observe(this) { viewState ->
+            if (!viewState.loadingMore) {
+                loadMoreListener.notifyLoadCompleted()
+            }
+
+            val newPhotos = viewState.photos
             recyclerAdapter.submitPhotos(newPhotos)
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        photosRecyclerView = null
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        loadMoreScrollListener = null
         adapter = null
     }
 }

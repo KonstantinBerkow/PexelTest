@@ -68,6 +68,8 @@ class CuratedPhotosViewModel(
     }
 
     private fun performLoad(currentState: CuratedPhotosState) {
+        Log.d(TAG, "performLoad, current state: $currentState")
+
         val nextPage = currentState.currentPage + 1
         val transientState = currentState.copy(
             error = null,
@@ -86,7 +88,6 @@ class CuratedPhotosViewModel(
             ) {
                 Log.d(TAG, "Response code: ${response.code()}, message: ${response.message()}")
                 response.body()?.let { body ->
-                    Log.d(TAG, "success thread: ${Thread.currentThread()}")
                     val newState = transientState.copy(
                         currentPage = body.page,
                         loadedPhotos = body.photos.map(ToViewPhoto),
@@ -98,7 +99,11 @@ class CuratedPhotosViewModel(
 
             override fun onFailure(call: Call<PexelPhotoPage>, error: Throwable) {
                 Log.e(TAG, "Failed to get curated photos", error)
-                Log.d(TAG, "failure thread: ${Thread.currentThread()}")
+                val newState = transientState.copy(
+                    currentPage = transientState.currentPage - 1,
+                    status = CuratedPhotosState.Status.IDLE
+                )
+                state.postValue(newState)
             }
         })
     }
@@ -110,12 +115,12 @@ class CuratedPhotosViewModel(
     )
 }
 
-object ToViewPhoto : (PexelPhoto) -> PexelPhotoItem {
+private object ToViewPhoto : (PexelPhoto) -> PexelPhotoItem {
     override fun invoke(fullPhoto: PexelPhoto): PexelPhotoItem {
         return PexelPhotoItem(
             id = fullPhoto.id,
             photographerName = fullPhoto.photographer,
-            srcSmall = fullPhoto.src["small"] ?: "",
+            srcSmall = fullPhoto.src["medium"] ?: "",
             srcLarge = fullPhoto.src["large"] ?: "",
             averageColor = fullPhoto.averageColor
         )

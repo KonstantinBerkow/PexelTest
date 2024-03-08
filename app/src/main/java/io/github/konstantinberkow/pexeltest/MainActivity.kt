@@ -3,6 +3,7 @@ package io.github.konstantinberkow.pexeltest
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosFragment
 
 private const val TAG = "MainActivity"
 

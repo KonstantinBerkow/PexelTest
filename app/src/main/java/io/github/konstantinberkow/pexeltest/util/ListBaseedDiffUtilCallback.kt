@@ -1,4 +1,4 @@
-package io.github.konstantinberkow.pexeltest
+package io.github.konstantinberkow.pexeltest.util
 
 import androidx.recyclerview.widget.DiffUtil
 

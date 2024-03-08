@@ -1,13 +1,11 @@
-package io.github.konstantinberkow.pexeltest
+package io.github.konstantinberkow.pexeltest.curated
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
-import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
-
-private const val TAG = "PhotosAdapter"
+import io.github.konstantinberkow.pexeltest.R
 
 class PhotosAdapter(
     private val onPhotoClicked: (PexelPhotoItem) -> Unit,
@@ -55,17 +53,9 @@ class PhotosAdapter(
         return photos[position].id
     }
 
-    fun replacePhotos(newPhotos: List<PexelPhotoItem>) {
+    fun submitPhotos(newPhotos: List<PexelPhotoItem>) {
         val diff = DiffUtil.calculateDiff(PhotosDiffUtilCallback(photos, newPhotos), false)
         photos = newPhotos
         diff.dispatchUpdatesTo(this)
-    }
-
-    fun addPhotos(newPhotos: List<PexelPhotoItem>) {
-        if (newPhotos.isNotEmpty()) {
-            val oldListSize = this.photos.size
-            photos = photos + newPhotos
-            this.notifyItemRangeInserted(oldListSize, newPhotos.size)
-        }
     }
 }

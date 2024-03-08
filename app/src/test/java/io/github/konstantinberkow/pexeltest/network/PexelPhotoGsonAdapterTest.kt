@@ -24,7 +24,7 @@ class PexelPhotoGsonAdapterTest {
     @Test
     fun `verify read`() {
         val id = 100500L
-        val photographer = "Artur Stec"
+        val photographer = "John Doe"
         val averageColor = "#7F6355"
         val key1 = "original"
         val srcUrl1 = "https://images.pexels.com/photos/$id?s=1"

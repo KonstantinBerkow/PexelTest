@@ -18,6 +18,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -25,6 +29,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -45,6 +52,8 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.gson)
     implementation(libs.retrofit)
+    implementation(libs.retrofitConverterGson)
+    implementation(libs.okhttpInterceptors)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

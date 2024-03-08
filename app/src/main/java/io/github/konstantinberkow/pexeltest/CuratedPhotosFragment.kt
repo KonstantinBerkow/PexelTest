@@ -6,10 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
+import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosViewModel
+import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosViewModelFactory
+import io.github.konstantinberkow.pexeltest.curated.PhotosAdapter
+import io.github.konstantinberkow.pexeltest.curated.PexelPhotoItem
 
 private const val TAG = "CuratedPhotosFragment"
 
@@ -19,12 +23,17 @@ class CuratedPhotosFragment : Fragment() {
 
     private var adapter: PhotosAdapter? = null
 
+    private lateinit var viewModel: CuratedPhotosViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adapter = PhotosAdapter(
             onPhotoClicked = ::navigate,
             imageLoader = Glide.with(this)
         )
+
+        this.viewModel = ViewModelProvider(this, CuratedPhotosViewModelFactory)
+            .get(CuratedPhotosViewModel::class.java)
     }
 
     private fun navigate(photo: PexelPhotoItem) {
@@ -53,12 +62,15 @@ class CuratedPhotosFragment : Fragment() {
         return layout
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
 
-        adapter?.replacePhotos(
-            PexelPhotoItem.MOCK_ITEMS
-        )
+        val recyclerAdapter = adapter ?: return
+        viewModel.observePhotos().observe(this) { viewState ->
+            val newPhotos = viewState.photos
+
+            recyclerAdapter.submitPhotos(newPhotos)
+        }
     }
 
     override fun onDestroy() {

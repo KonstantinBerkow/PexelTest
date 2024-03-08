@@ -1,6 +1,6 @@
-package io.github.konstantinberkow.pexeltest
+package io.github.konstantinberkow.pexeltest.curated
 
-import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
+import io.github.konstantinberkow.pexeltest.util.ListBasedDiffUtilCallback
 
 class PhotosDiffUtilCallback(
     oldList: List<PexelPhotoItem>,

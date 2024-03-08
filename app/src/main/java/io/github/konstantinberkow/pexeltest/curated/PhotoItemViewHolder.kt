@@ -1,13 +1,12 @@
-package io.github.konstantinberkow.pexeltest
+package io.github.konstantinberkow.pexeltest.curated
 
-import android.graphics.Color
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
-import io.github.konstantinberkow.pexeltest.data.PexelPhotoItem
+import io.github.konstantinberkow.pexeltest.R
 
 class PhotoItemViewHolder(
     itemView: View,
@@ -34,7 +33,7 @@ class PhotoItemViewHolder(
     fun bind(photo: PexelPhotoItem) {
         this.photo = photo
 
-        cardView.setCardBackgroundColor(Color.parseColor(photo.averageColor))
+        cardView.setCardBackgroundColor(photo.averageColor)
         authorTextView.text = photo.photographerName
 
         imageLoader.clear(photoImageView)

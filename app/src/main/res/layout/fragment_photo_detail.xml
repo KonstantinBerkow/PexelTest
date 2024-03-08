@@ -14,6 +14,7 @@
 
     <androidx.cardview.widget.CardView
         style="@style/CardViewStyle"
+        android:id="@+id/author_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"

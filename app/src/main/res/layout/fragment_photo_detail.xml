@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/photo_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        tools:src="@mipmap/ic_launcher" />
+
+    <androidx.cardview.widget.CardView
+        style="@style/CardViewStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp">
+
+        <TextView
+            android:id="@+id/author_name_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:textSize="24sp"
+            tools:text="John Doe" />
+
+    </androidx.cardview.widget.CardView>
+
+    <ProgressBar
+        android:id="@+id/load_progress_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</FrameLayout>

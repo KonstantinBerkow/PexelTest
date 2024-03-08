@@ -1,5 +1,6 @@
 package io.github.konstantinberkow.pexeltest.curated
 
+import android.graphics.Color
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -34,13 +35,22 @@ class PhotoItemViewHolder(
         this.photo = photo
 
         cardView.setCardBackgroundColor(photo.averageColor)
+
         authorTextView.text = photo.photographerName
+        authorTextView.setBackgroundColor(inverseColor(photo.averageColor))
 
         imageLoader.clear(photoImageView)
 
         imageLoader.load(photo.srcSmall)
             .placeholder(R.mipmap.ic_launcher)
             .into(photoImageView)
+    }
+
+    private fun inverseColor(averageColor: Int): Int {
+        val red = Color.red(averageColor)
+        val green = Color.green(averageColor)
+        val blue = Color.blue(averageColor)
+        return Color.rgb(255 - red, 255 - green, 255 - blue)
     }
 
     fun unbind() {

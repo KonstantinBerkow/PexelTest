@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PexelTest</string>
+    <string name="curated_photos_screen_label">Curated photos</string>
 </resources>

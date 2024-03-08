@@ -1,17 +1,19 @@
 package io.github.konstantinberkow.pexeltest.curated
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.R
+import io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment
 import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
 
 private const val TAG = "CuratedPhotosFragment"
@@ -40,7 +42,11 @@ class CuratedPhotosFragment : Fragment() {
     }
 
     private fun navigate(photo: PexelPhotoItem) {
-        Log.d(TAG, "Open detail page: $photo")
+        findNavController()
+            .navigate(
+                R.id.action_curated_photos_fragment_to_photo_detail_fragment,
+                bundleOf(PhotoDetailFragment.PHOTO_ID_KEY to photo.id)
+            )
     }
 
     override fun onCreateView(

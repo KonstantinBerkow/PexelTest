@@ -3,7 +3,6 @@ package io.github.konstantinberkow.pexeltest
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import io.github.konstantinberkow.pexeltest.curated.CuratedPhotosFragment
 
 private const val TAG = "MainActivity"
 
@@ -16,22 +15,5 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(findViewById(R.id.toolbar))
-
-        if (savedInstanceState == null) {
-            Log.d(TAG, "create new fragment")
-            val fragment = CuratedPhotosFragment()
-            supportFragmentManager.beginTransaction()
-                .add(R.id.content_frame, fragment, Screens.CURATED_PHOTOS.name)
-                .commitAllowingStateLoss()
-        } else {
-            Log.d(
-                TAG,
-                "old top fragment: ${supportFragmentManager.findFragmentById(R.id.content_frame)}"
-            )
-        }
-    }
-
-    private enum class Screens {
-        CURATED_PHOTOS
     }
 }

@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.swiperefreshlayout)
+    implementation(libs.navigationFragments)
 
     implementation(libs.glide)
     implementation(libs.gson)

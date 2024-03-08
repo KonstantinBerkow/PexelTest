@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/photos_graph.xml"
+    app:startDestination="@id/curated_photos_fragment">
+
+    <fragment
+        android:id="@+id/curated_photos_fragment"
+        android:name="io.github.konstantinberkow.pexeltest.curated.CuratedPhotosFragment"
+        android:label="@string/curated_photos_screen_label"
+        tools:layout="@layout/fragment_curated_photos">
+        <action
+            android:id="@+id/action_curated_photos_fragment_to_photo_detail_fragment"
+            app:destination="@id/photo_detail_fragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"
+            app:popUpTo="@id/curated_photos_fragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/photo_detail_fragment"
+        android:name="io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment"
+        tools:layout="@layout/fragment_photo_detail">
+        <argument
+            android:name="photo_id"
+            app:argType="long" />
+    </fragment>
+
+</navigation>

@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonWriter
 
 private const val ID_KEY = "id"
 private const val PHOTOGRAPHER_KEY = "photographer"
+private const val PHOTOGRAPHER_URL_KEY = "photographer_url"
 private const val AVERAGE_COLOR_KEY = "avg_color"
 private const val SRC_KEY = "src"
 //private const val SMALL_SRC_KEY = "small"
@@ -49,8 +50,11 @@ class PexelPhotoGsonAdapter(
 
         var id: Long = 0
         var photographer: String? = null
+        var photographerUrl: String? = null
         var averageColor: String? = null
         var src: Map<String, String>? = null
+
+        PHOTOGRAPHER_URL_KEY
 
         with(reader) {
             beginObject()
@@ -60,6 +64,7 @@ class PexelPhotoGsonAdapter(
                     ID_KEY -> id = nextLong()
                     PHOTOGRAPHER_KEY -> photographer = nextString()
                     AVERAGE_COLOR_KEY -> averageColor = nextString()
+                    PHOTOGRAPHER_URL_KEY -> photographerUrl = nextString()
                     SRC_KEY -> {
                         beginObject()
                         src = mutableMapOf<String, String>().apply {
@@ -76,10 +81,11 @@ class PexelPhotoGsonAdapter(
             endObject()
         }
 
-        if (id != 0L && photographer != null && averageColor != null && src != null) {
+        if (id != 0L && photographer != null && photographerUrl != null && averageColor != null && src != null) {
             return PexelPhoto(
                 id = id,
                 photographer = photographer!!,
+                photographerUrl = photographerUrl!!,
                 averageColor = parseColor(averageColor!!),
                 src = src!!
             )

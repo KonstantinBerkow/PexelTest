@@ -26,6 +26,7 @@ class PexelPhotoGsonAdapterTest {
         val id = 100500L
         val photographer = "John Doe"
         val averageColor = "#7F6355"
+        val photographerUrl = "https://pexel.com/@john_doe"
         val key1 = "original"
         val srcUrl1 = "https://images.pexels.com/photos/$id?s=1"
         val key2 = "small"
@@ -34,6 +35,7 @@ class PexelPhotoGsonAdapterTest {
         val expected = PexelPhoto(
             id = id,
             photographer = photographer,
+            photographerUrl = photographerUrl,
             averageColor = androidParseColor(averageColor),
             src = mapOf(key1 to srcUrl1, key2 to srcUrl2)
         )
@@ -42,6 +44,7 @@ class PexelPhotoGsonAdapterTest {
             {
                 "id": $id,
                 "photographer": "$photographer",
+                "photographer_url": "$photographerUrl",
                 "avg_color": "$averageColor",
                 "src": {
                     "$key1": "$srcUrl1",

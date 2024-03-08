@@ -30,6 +30,8 @@ class PexelPhotoPageGsonAdapterTest {
         val id2 = 100501L
         val photographer1 = "John Doe #1"
         val photographer2 = "John Doe #2"
+        val photographerUrl1 = "https://pexel.com/@john_doe_1"
+        val photographerUrl2 = "https://pexel.com/@john_doe_2"
         val averageColor = "#7F6355"
         val key1 = "original"
         val srcUrl1 = "https://images.pexels.com/photos/abc?s=1"
@@ -42,12 +44,14 @@ class PexelPhotoPageGsonAdapterTest {
                 PexelPhoto(
                     id = id1,
                     photographer = photographer1,
+                    photographerUrl = photographerUrl1,
                     averageColor = androidParseColor(averageColor),
                     src = mapOf(key1 to srcUrl1, key2 to srcUrl2)
                 ),
                 PexelPhoto(
                     id = id2,
                     photographer = photographer2,
+                    photographerUrl = photographerUrl2,
                     averageColor = androidParseColor(averageColor),
                     src = mapOf(key1 to srcUrl1, key2 to srcUrl2)
                 )
@@ -62,6 +66,7 @@ class PexelPhotoPageGsonAdapterTest {
                 {
                   "id": $id1,
                   "photographer": "$photographer1",
+                  "photographer_url": "$photographerUrl1",
                   "avg_color": "$averageColor",
                   "src": {
                     "$key1": "$srcUrl1",
@@ -72,6 +77,7 @@ class PexelPhotoPageGsonAdapterTest {
                 {
                   "id": $id2,
                   "photographer": "$photographer2",
+                  "photographer_url": "$photographerUrl2",
                   "avg_color": "$averageColor",
                   "src": {
                     "$key1": "$srcUrl1",

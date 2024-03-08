@@ -1,5 +1,6 @@
 package io.github.konstantinberkow.pexeltest.detail
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,10 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import io.github.konstantinberkow.pexeltest.R
 
 class PhotoDetailFragment : Fragment() {
@@ -21,6 +26,8 @@ class PhotoDetailFragment : Fragment() {
     private lateinit var loadProgressBar: ProgressBar
 
     private lateinit var viewModel: PhotoDetailViewModel
+
+    private var photoLoaded: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +63,7 @@ class PhotoDetailFragment : Fragment() {
                     hideInfo()
                 }
 
-                loadProgressBar.visibility = if (state.loading) {
+                loadProgressBar.visibility = if (state.loading || !photoLoaded) {
                     View.VISIBLE
                 } else {
                     View.GONE
@@ -65,9 +72,36 @@ class PhotoDetailFragment : Fragment() {
         }
     }
 
+    private fun notifyPhotoLoaded() {
+        photoLoaded = true
+        loadProgressBar.visibility = View.GONE
+    }
+
     private fun showPhoto(photo: PhotoDetail) {
         Glide.with(this)
             .load(photo.originalImageUrl)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    notifyPhotoLoaded()
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    notifyPhotoLoaded()
+                    return false
+                }
+            })
             .into(photoImageView)
 
         authorNameTextView.text = photo.authorName

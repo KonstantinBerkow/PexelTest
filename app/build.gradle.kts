@@ -13,6 +13,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,6 +57,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofitConverterGson)
     implementation(libs.okhttpInterceptors)
+
+    implementation(libs.androidx.multidex)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

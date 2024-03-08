@@ -33,18 +33,13 @@ object GlobalDependencies {
     val pexelApi by lazy {
         Log.d(TAG, "Create okhttp instance")
         val okhttp = OkHttpClient.Builder()
-            .run {
+            .also {
                 if (BuildConfig.DEBUG) {
-                    val loggingInterceptor = HttpLoggingInterceptor(
-                        object : HttpLoggingInterceptor.Logger {
-                            override fun log(message: String) {
-                                Log.d("Retrofit", message)
-                            }
-                        }
-                    )
-                    addInterceptor(loggingInterceptor)
-                } else {
-                    this
+                    val loggingInterceptor = HttpLoggingInterceptor { message ->
+                        Log.v("Retrofit", message)
+                    }
+                    loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+                    it.addInterceptor(loggingInterceptor)
                 }
             }
             .build()

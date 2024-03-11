@@ -1,0 +1,21 @@
+CREATE TABLE photo (
+  _id INTEGER PRIMARY KEY NOT NULL ON CONFLICT REPLACE,
+  author_name TEXT NOT NULL,
+  average_color INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO photo(_id, author_name, average_color)
+VALUES (?, ?, ?);
+
+selectPhotosForQualifier:
+SELECT _id, author_name, average_color, u.path
+FROM photo AS p INNER JOIN image_url AS u ON u.photo_id == _id AND u.qualifier == ?;
+
+selectPhotoForQualifier:
+SELECT _id, author_name, average_color, u.path
+FROM photo AS p INNER JOIN image_url AS u ON u.photo_id == _id AND u.qualifier == :qualifier
+WHERE u.photo_id == :id;
+
+deleteAll:
+DELETE FROM photo;

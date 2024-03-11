@@ -1,0 +1,12 @@
+CREATE TABLE image_url (
+    photo_id INTEGER NOT NULL,
+    qualifier INTEGER NOT NULL,
+    path TEXT NOT NULL
+);
+
+insert:
+INSERT INTO image_url(photo_id, qualifier, path)
+VALUES (?, ?, ?);
+
+deleteAll:
+DELETE FROM image_url;

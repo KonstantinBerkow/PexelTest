@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.sqlDelight)
 }
 
 android {
@@ -9,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.konstantinberkow.pexeltest"
-        minSdk = 19
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -44,6 +45,14 @@ android {
     buildToolsVersion = "34.0.0"
 }
 
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("io.github.konstantinberkow.pexeltest")
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -59,6 +68,8 @@ dependencies {
     implementation(libs.okhttpInterceptors)
 
     implementation(libs.androidx.multidex)
+
+    implementation(libs.sqlDelightAndroid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

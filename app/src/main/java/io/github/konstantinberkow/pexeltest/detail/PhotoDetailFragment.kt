@@ -38,7 +38,7 @@ class PhotoDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        this.viewModel = ViewModelProvider(this, PhotoDetailViewModelFactory)
+        this.viewModel = ViewModelProvider(this, PhotoDetailViewModel.Factory)
             .get(PhotoDetailViewModel::class.java)
     }
 

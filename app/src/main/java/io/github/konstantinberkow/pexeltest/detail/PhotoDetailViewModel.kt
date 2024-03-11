@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
 import retrofit2.Call
@@ -67,6 +70,19 @@ class PhotoDetailViewModel(
                 Log.e(TAG, "Failed to get photo info", error)
             }
         })
+    }
+
+    object Factory : ViewModelProvider.Factory {
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+            require(modelClass == PhotoDetailViewModel::class.java)
+            val app = extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
+
+            return PhotoDetailViewModel(
+                pexelApiProvider = { app.dependenciesContainer.pexelApi }
+            ) as T
+        }
     }
 }
 

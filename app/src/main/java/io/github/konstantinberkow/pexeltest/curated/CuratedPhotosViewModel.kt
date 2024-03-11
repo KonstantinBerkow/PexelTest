@@ -4,7 +4,10 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.map
+import androidx.lifecycle.viewmodel.CreationExtras
+import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
 import io.github.konstantinberkow.pexeltest.network.PexelPhotoPage
@@ -20,7 +23,7 @@ class CuratedPhotosViewModel(
     private val pexelApiProvider: () -> PexelApi
 ) : ViewModel() {
 
-    private val state = MutableLiveData<CuratedPhotosState>(
+    private val state = MutableLiveData(
         CuratedPhotosState(
             loadedPhotos = emptyList(),
             currentPage = 0,
@@ -123,6 +126,18 @@ class CuratedPhotosViewModel(
         val loadingMore: Boolean,
         val errorMsg: String? = null
     )
+
+    object Factory : ViewModelProvider.Factory {
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+            require(modelClass == CuratedPhotosViewModel::class.java)
+            val app = extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
+            return CuratedPhotosViewModel(
+                pexelApiProvider = { app.dependenciesContainer.pexelApi }
+            ) as T
+        }
+    }
 }
 
 private object ToViewPhoto : (PexelPhoto) -> PexelPhotoItem {

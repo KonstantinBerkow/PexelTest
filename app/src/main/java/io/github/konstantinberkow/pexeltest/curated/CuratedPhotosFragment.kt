@@ -37,7 +37,7 @@ class CuratedPhotosFragment : Fragment() {
             imageLoader = Glide.with(this)
         )
 
-        this.viewModel = ViewModelProvider(this, CuratedPhotosViewModelFactory)
+        this.viewModel = ViewModelProvider(this, CuratedPhotosViewModel.Factory)
             .get(CuratedPhotosViewModel::class.java)
     }
 

@@ -1,6 +1,7 @@
 package io.github.konstantinberkow.pexeltest.cache
 
 import android.content.Context
+import android.net.Uri
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.ImageUrlQueries
@@ -8,7 +9,7 @@ import io.github.konstantinberkow.pexeltest.PhotoQueries
 
 class DbPexelPhotoStore(
     context: Context,
-    private val photoBasePath: String
+    photoBasePath: String
 ) : PexelPhotoStore {
 
     private val database: Database by lazy {
@@ -28,8 +29,9 @@ class DbPexelPhotoStore(
         photoQueries.insert(photoId, photo.authorName, photo.averageColor)
         photo.src.forEach { (key, url) ->
             SizeSpecifier.fromString(key)?.let { specifier ->
-                val path = url.removePrefix(photoBasePath)
-                imageUrlQueries.insert(photoId, specifier.intValue.toLong(), path)
+                // photoBasePath + "/:id/pexels-photo-20423561.jpeg?query=...
+                val query = Uri.parse(url).query
+                imageUrlQueries.insert(photoId, specifier.intValue.toLong(), query ?: "")
             }
         }
     }
@@ -83,19 +85,30 @@ class DbPexelPhotoStore(
 }
 
 private class MapSelectResultToPhotoWirthUrl(
-    private val photoBasePath: String
+    photoBasePath: String
 ) : (Long, String, Long, String) -> DbPhotoWithUrl {
+
+    private val baseUri = Uri.parse(photoBasePath)
+
     override fun invoke(
         id: Long,
         authorName: String,
         averageColor: Long,
-        path: String
+        query: String
     ): DbPhotoWithUrl {
+        // photoBasePath + "/:id/pexels-photo-20423561.jpeg?query=...
+        val strId = id.toString()
+        val fullUrl = baseUri.buildUpon()
+            .appendPath(strId)
+            .appendPath("pexels-photo-$id.jpeg")
+            .query(query)
+            .build()
+
         return DbPhotoWithUrl(
             id = id,
             authorName = authorName,
             averageColor = averageColor,
-            imageUrl = photoBasePath + path
+            imageUrl = fullUrl.toString()
         )
     }
 }

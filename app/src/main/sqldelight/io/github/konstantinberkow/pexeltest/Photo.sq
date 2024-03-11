@@ -9,11 +9,11 @@ INSERT INTO photo(_id, author_name, average_color)
 VALUES (?, ?, ?);
 
 selectPhotosForQualifier:
-SELECT _id, author_name, average_color, u.path
+SELECT _id, author_name, average_color, u.query
 FROM photo AS p INNER JOIN image_url AS u ON u.photo_id == _id AND u.qualifier == ?;
 
 selectPhotoForQualifier:
-SELECT _id, author_name, average_color, u.path
+SELECT _id, author_name, average_color, u.query
 FROM photo AS p INNER JOIN image_url AS u ON u.photo_id == _id AND u.qualifier == :qualifier
 WHERE u.photo_id == :id;
 

@@ -37,8 +37,11 @@ class CuratedPhotosFragment : Fragment() {
             imageLoader = Glide.with(this)
         )
 
-        this.viewModel = ViewModelProvider(this, CuratedPhotosViewModel.Factory)
+        viewModel = ViewModelProvider(this, CuratedPhotosViewModel.Factory)
             .get(CuratedPhotosViewModel::class.java)
+            .also {
+                it.pageSize = 5
+            }
     }
 
     private fun navigate(photo: PexelPhotoItem) {
@@ -76,7 +79,7 @@ class CuratedPhotosFragment : Fragment() {
 
                 loadMoreScrollListener = LoadMoreScrollListener(
                     layoutManager = layoutManager,
-                    loadThreshold = 5,
+                    loadThreshold = 1,
                     loadMore = { viewModel.loadMore() }
                 ).also {
                     recyclerView.addOnScrollListener(it)

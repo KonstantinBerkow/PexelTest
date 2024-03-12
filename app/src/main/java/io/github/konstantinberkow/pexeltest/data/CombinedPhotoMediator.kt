@@ -26,24 +26,25 @@ class CombinedPhotoMediator(
         executor.execute {
             val result = try {
                 val response = when (action) {
-                    is PhotoMediator.Action.LoadPage -> pexelApi.curatedPhotos(action.page, 15)
-                    PhotoMediator.Action.Refresh -> pexelApi.curatedPhotos(1, 15)
+                    is PhotoMediator.Action.LoadPage ->
+                        pexelApi.curatedPhotos(action.page, action.pageSize)
+
+                    is PhotoMediator.Action.Refresh ->
+                        pexelApi.curatedPhotos(1, action.pageSize)
                 }.execute()
                 val body = response.body()
                 val error = response.errorBody()
                 if (body != null) {
                     when (action) {
-                        is PhotoMediator.Action.LoadPage -> {
+                        is PhotoMediator.Action.LoadPage ->
                             body.photos.map(ToDbPhoto).also {
                                 pexelPhotoStore.addPhotos(it)
                             }
-                        }
 
-                        PhotoMediator.Action.Refresh -> {
+                        is PhotoMediator.Action.Refresh ->
                             body.photos.map(ToDbPhoto).also {
                                 pexelPhotoStore.replacePhotos(it)
                             }
-                        }
                     }
                     PhotoMediator.Result.Success(action)
                 } else if (error != null) {

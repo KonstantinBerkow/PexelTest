@@ -15,7 +15,7 @@ interface PexelApi {
     @Headers(AUTH_HEADER)
     fun curatedPhotos(
         @Query("page") page: Int,
-        @Query("page_size") pageSize: Int
+        @Query("per_page") pageSize: Int
     ): Call<PexelPhotoPage>
 
     @GET("photos/{id}")

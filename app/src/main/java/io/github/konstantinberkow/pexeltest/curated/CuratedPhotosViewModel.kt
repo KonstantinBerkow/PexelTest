@@ -34,6 +34,12 @@ class CuratedPhotosViewModel(
         }
     }
 
+    var pageSize: Int = 5
+        set(value) {
+            require(value >= 0)
+            field = value
+        }
+
     private val exposed: MutableLiveData<CuratedPhotosState> by lazy(LazyThreadSafetyMode.NONE) {
         val stateLiveData = MutableLiveData(
             CuratedPhotosState(
@@ -102,7 +108,9 @@ class CuratedPhotosViewModel(
                 status = CuratedPhotosState.Status.LOADING
             )
             exposed.value = transientState
-            mediator.performAction(PhotoMediator.Action.LoadPage(nextPage)) { result ->
+            mediator.performAction(
+                PhotoMediator.Action.LoadPage(nextPage, pageSize)
+            ) { result ->
                 handleResult(result, transientState)
             }
         } else {
@@ -123,7 +131,7 @@ class CuratedPhotosViewModel(
             status = CuratedPhotosState.Status.LOADING
         )
         exposed.value = transientState
-        mediator.performAction(PhotoMediator.Action.Refresh) { result ->
+        mediator.performAction(PhotoMediator.Action.Refresh(pageSize = pageSize)) { result ->
             handleResult(result, transientState)
         }
     }
@@ -147,10 +155,10 @@ class CuratedPhotosViewModel(
                         showingFreshData = true,
                         error = null,
                         currentPage = action.page,
-                        hasMore = newPhotos.size > lastState.loadedPhotos.size,
+                        hasMore = newPhotos.size >= lastState.loadedPhotos.size + action.pageSize,
                         status = CuratedPhotosState.Status.IDLE
                     )
-                    PhotoMediator.Action.Refresh -> lastState.copy(
+                    is PhotoMediator.Action.Refresh -> lastState.copy(
                         loadedPhotos = newPhotos,
                         showingFreshData = true,
                         error = null,

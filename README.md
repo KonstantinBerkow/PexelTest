@@ -10,3 +10,11 @@
 - [x] Full photo page
 - [x] Photo cache
 - [ ] Data cache
+
+# Installation
+Via comand line:
+```
+./gradlew :app:assembleDebug
+adb install <path_to_apk>
+```
+Or build and deploy via Android Studio.

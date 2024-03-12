@@ -2,9 +2,12 @@ package io.github.konstantinberkow.pexeltest.app
 
 import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.util.Log
+import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.google.gson.GsonBuilder
 import io.github.konstantinberkow.pexeltest.BuildConfig
+import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.cache.DbPexelPhotoStore
 import io.github.konstantinberkow.pexeltest.data.CombinedPhotoMediator
 import io.github.konstantinberkow.pexeltest.network.PexelApi
@@ -25,11 +28,40 @@ class AppDependenciesContainer(
     private val appContext: Context
 ) {
 
+    private fun pexelPhotImageUrlDbAdapter(): DbPexelPhotoStore.ImageUrlSaveContract {
+        return object : DbPexelPhotoStore.ImageUrlSaveContract {
+
+            private val baseUri = Uri.parse("https://images.pexels.com/photos")
+
+            override fun extractPartToSave(url: String): String {
+                return Uri.parse(url).query ?: ""
+            }
+
+            override fun restoreImageUrl(photoId: Long, savedPart: String): String {
+                // photoBasePath + "/:id/pexels-photo-:id.jpeg?query=...
+                val strId = photoId.toString()
+                val fullUrl = baseUri.buildUpon()
+                    .appendPath(strId)
+                    .appendPath("pexels-photo-$strId.jpeg")
+                    .encodedQuery(savedPart)
+                    .build()
+                return fullUrl.toString()
+            }
+        }
+    }
+
     val pexelPhotoStore by lazy {
         Log.d(TAG, "Create pexelPhotoStore")
         DbPexelPhotoStore(
-            context = appContext,
-            photoBasePath = "https://images.pexels.com/photos/"
+            databaseProvider = {
+                val driver = AndroidSqliteDriver(
+                    schema = Database.Schema,
+                    context = appContext,
+                    name = "pexel_photos.db"
+                )
+                Database(driver)
+            },
+            imageUrlSaveAdapter = pexelPhotImageUrlDbAdapter()
         )
     }
 

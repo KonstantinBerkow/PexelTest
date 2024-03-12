@@ -1,9 +1,6 @@
 package io.github.konstantinberkow.pexeltest.cache
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
-import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.ImageUrlQueries
 import io.github.konstantinberkow.pexeltest.PhotoQueries
@@ -11,16 +8,20 @@ import io.github.konstantinberkow.pexeltest.PhotoQueries
 private const val TAG = "DbPexelPhotoStore"
 
 class DbPexelPhotoStore(
-    context: Context,
-    photoBasePath: String
+    databaseProvider: () -> Database,
+    private val imageUrlSaveAdapter: ImageUrlSaveContract
 ) : PexelPhotoStore {
 
-    private val database: Database by lazy {
-        val driver = AndroidSqliteDriver(Database.Schema, context, "pexel_photos.db")
-        Database(driver)
+    interface ImageUrlSaveContract {
+
+        fun extractPartToSave(url: String): String
+
+        fun restoreImageUrl(photoId: Long, savedPart: String): String
     }
 
-    private val mapper = MapSelectResultToPhotoWirthUrl(photoBasePath)
+    private val database: Database by lazy(databaseProvider)
+
+    private val mapper = MapSelectResultToPhotoWirthUrl(imageUrlSaveAdapter)
 
     // must be in transaction
     private fun performPhotoInsert(
@@ -32,10 +33,9 @@ class DbPexelPhotoStore(
         photoQueries.insert(photoId, photo.authorName, photo.averageColor.toLong())
         photo.src.forEach { (key, url) ->
             SizeSpecifier.fromString(key)?.let { specifier ->
-                // photoBasePath + "/:id/pexels-photo-20423561.jpeg?query=...
-                val query = Uri.parse(url).query ?: ""
-                Log.v(TAG, "extracted query: $query")
-                imageUrlQueries.insert(photoId, specifier.intValue.toLong(), query)
+                val partToSave = imageUrlSaveAdapter.extractPartToSave(url)
+                Log.v(TAG, "Image url part to save: $partToSave")
+                imageUrlQueries.insert(photoId, specifier.longValue, partToSave)
             }
         }
     }
@@ -73,7 +73,7 @@ class DbPexelPhotoStore(
 
     override fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
         return database.photoQueries
-            .selectPhotosForQualifier(specifier.intValue.toLong(), mapper)
+            .selectPhotosForQualifier(specifier.longValue, mapper)
             .executeAsList()
     }
 
@@ -81,7 +81,7 @@ class DbPexelPhotoStore(
         return database.photoQueries
             .selectPhotoForQualifier(
                 id = id,
-                qualifier = SizeSpecifier.ORIGINAL.intValue.toLong(),
+                qualifier = SizeSpecifier.ORIGINAL.longValue,
                 mapper = mapper
             )
             .executeAsOne()
@@ -89,10 +89,8 @@ class DbPexelPhotoStore(
 }
 
 private class MapSelectResultToPhotoWirthUrl(
-    photoBasePath: String
+    private val imageUrlSaveAdapter: DbPexelPhotoStore.ImageUrlSaveContract
 ) : (Long, String, Long, String) -> DbPhotoWithUrl {
-
-    private val baseUri = Uri.parse(photoBasePath)
 
     override fun invoke(
         id: Long,
@@ -100,14 +98,7 @@ private class MapSelectResultToPhotoWirthUrl(
         averageColor: Long,
         query: String
     ): DbPhotoWithUrl {
-        // photoBasePath + "/:id/pexels-photo-:id.jpeg?query=...
-        val strId = id.toString()
-        val fullUrl = baseUri.buildUpon()
-            .appendPath(strId)
-            .appendPath("pexels-photo-$strId.jpeg")
-            .encodedQuery(query)
-            .build()
-        val restoredUrl = fullUrl.toString()
+        val restoredUrl = imageUrlSaveAdapter.restoreImageUrl(id, query)
         Log.v(TAG, "Restored url: $restoredUrl")
         return DbPhotoWithUrl(
             id = id,

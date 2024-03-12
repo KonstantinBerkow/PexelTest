@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.R
-import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment
 import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
 import io.github.konstantinberkow.pexeltest.util.MixedTypesAdapter
@@ -70,13 +69,9 @@ class CuratedPhotosFragment : Fragment() {
             )
         }
 
-        val ioExecutor =
-            (requireContext().applicationContext as PexelTestApp).dependenciesContainer.ioExecutor
-
         adapter = MixedTypesAdapter(
             viewHolderConfigs = configs,
             diffConfig = AsyncDifferConfig.Builder(CuratedPhotoFeedItem.ItemCallbackFactory)
-                .setBackgroundThreadExecutor(ioExecutor)
                 .build()
         )
 
@@ -142,7 +137,7 @@ class CuratedPhotosFragment : Fragment() {
                 swipeRefreshView.isRefreshing = false
             }
 
-            val newItems = buildList<CuratedPhotoFeedItem> {
+            val newItems = buildList {
                 newPhotos.forEach {
                     add(CuratedPhotoFeedItem.Photo(it))
                 }

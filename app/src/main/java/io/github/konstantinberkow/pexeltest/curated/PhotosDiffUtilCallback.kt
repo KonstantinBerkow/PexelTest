@@ -7,11 +7,11 @@ class PhotosDiffUtilCallback(
     newList: List<PexelPhotoItem>,
 ) : ListBasedDiffUtilCallback<PexelPhotoItem>(oldList, newList) {
 
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return getOldItemAt(oldItemPosition).id == getNewItemAt(newItemPosition).id
+    override fun areItemsTheSame(oldItem: PexelPhotoItem, newItem: PexelPhotoItem): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return getOldItemAt(oldItemPosition).photographerName == getNewItemAt(newItemPosition).photographerName
+    override fun areContentsTheSame(oldItem: PexelPhotoItem, newItem: PexelPhotoItem): Boolean {
+        return oldItem.photographerName == newItem.photographerName
     }
 }

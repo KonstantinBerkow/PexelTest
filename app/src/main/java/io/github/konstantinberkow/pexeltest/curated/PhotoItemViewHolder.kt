@@ -5,21 +5,19 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
 import io.github.konstantinberkow.pexeltest.R
+import io.github.konstantinberkow.pexeltest.util.BindableViewHolder
 
 class PhotoItemViewHolder(
     itemView: View,
     onPhotoClicked: (PexelPhotoItem) -> Unit,
     private val imageLoader: RequestManager
-) : RecyclerView.ViewHolder(itemView) {
+) : BindableViewHolder<CuratedPhotoFeedItem.Photo>(itemView) {
 
     private val cardView: CardView
     private val photoImageView: ImageView
     private val authorTextView: TextView
-
-    private var photo: PexelPhotoItem? = null
 
     init {
         cardView = itemView as CardView
@@ -27,12 +25,14 @@ class PhotoItemViewHolder(
         authorTextView = itemView.findViewById(R.id.author_text_view)
 
         itemView.setOnClickListener {
-            photo?.let { onPhotoClicked(it) }
+            withData {
+                onPhotoClicked(it.pexelPhotoItem)
+            }
         }
     }
 
-    fun bind(photo: PexelPhotoItem) {
-        this.photo = photo
+    override fun onBind(data: CuratedPhotoFeedItem.Photo, payloads: List<Any?>) {
+        val photo = data.pexelPhotoItem
 
         cardView.setCardBackgroundColor(photo.averageColor)
 
@@ -46,16 +46,14 @@ class PhotoItemViewHolder(
             .into(photoImageView)
     }
 
+    override fun onRecycled() {
+        imageLoader.clear(photoImageView)
+    }
+
     private fun inverseColor(averageColor: Int): Int {
         val red = Color.red(averageColor)
         val green = Color.green(averageColor)
         val blue = Color.blue(averageColor)
         return Color.rgb(255 - red, 255 - green, 255 - blue)
-    }
-
-    fun unbind() {
-        photo = null
-
-        imageLoader.clear(photoImageView)
     }
 }

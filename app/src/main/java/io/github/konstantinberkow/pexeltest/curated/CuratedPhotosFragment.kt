@@ -1,6 +1,7 @@
 package io.github.konstantinberkow.pexeltest.curated
 
 import android.os.Bundle
+import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,8 @@ import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.R
 import io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment
 import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
+import io.github.konstantinberkow.pexeltest.util.MixedTypesAdapter
+import io.github.konstantinberkow.pexeltest.util.ViewHolderConfig
 
 private const val TAG = "CuratedPhotosFragment"
 
@@ -26,15 +29,49 @@ class CuratedPhotosFragment : Fragment() {
 
     private var loadMoreScrollListener: LoadMoreScrollListener? = null
 
-    private var adapter: PhotosAdapter? = null
+    private var adapter: MixedTypesAdapter<CuratedPhotoFeedItem>? = null
 
     private lateinit var viewModel: CuratedPhotosViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        adapter = PhotosAdapter(
-            onPhotoClicked = ::navigate,
-            imageLoader = Glide.with(this)
+
+        val onPhotoClicked = { photo: PexelPhotoItem ->
+            findNavController()
+                .navigate(
+                    R.id.action_curated_photos_fragment_to_photo_detail_fragment,
+                    bundleOf(PhotoDetailFragment.PHOTO_ID_KEY to photo.id)
+                )
+        }
+        val glide = Glide.with(this)
+
+        val configs = SparseArray<ViewHolderConfig<CuratedPhotoFeedItem>>().apply {
+            put(
+                CuratedPhotoFeedItem.Types.photo,
+                ViewHolderConfig(
+                    layoutId = R.layout.photo_item_view,
+                    holderFactory = { itemView ->
+                        PhotoItemViewHolder(
+                            itemView = itemView,
+                            onPhotoClicked = onPhotoClicked,
+                            imageLoader = glide
+                        )
+                    }
+                ) as ViewHolderConfig<CuratedPhotoFeedItem>
+            )
+            put(
+                CuratedPhotoFeedItem.Types.loader,
+                ViewHolderConfig(
+                    layoutId = R.layout.loader_item,
+                    holderFactory = { LoaderItemViewHolder(it) }
+                ) as ViewHolderConfig<CuratedPhotoFeedItem>
+            )
+        }
+
+        adapter = MixedTypesAdapter(
+            viewHolderConfigs = configs,
+            detectMoves = false,
+            diffUtilCallbackFactory = CuratedPhotoFeedItem.DiffUtilFactoryCallbackFactory
         )
 
         viewModel = ViewModelProvider(this, CuratedPhotosViewModel.Factory)
@@ -42,14 +79,6 @@ class CuratedPhotosFragment : Fragment() {
             .also {
                 it.pageSize = 5
             }
-    }
-
-    private fun navigate(photo: PexelPhotoItem) {
-        findNavController()
-            .navigate(
-                R.id.action_curated_photos_fragment_to_photo_detail_fragment,
-                bundleOf(PhotoDetailFragment.PHOTO_ID_KEY to photo.id)
-            )
     }
 
     override fun onCreateView(
@@ -96,7 +125,9 @@ class CuratedPhotosFragment : Fragment() {
         val loadMoreListener = loadMoreScrollListener ?: return
 
         viewModel.observePhotos().observe(this) { viewState ->
-            if (viewState.loadingMore && viewState.photos.isEmpty()) {
+            val newPhotos = viewState.photos
+
+            if (viewState.loadingMore && newPhotos.isEmpty()) {
                 swipeRefreshView.isRefreshing = true
             }
 
@@ -105,8 +136,16 @@ class CuratedPhotosFragment : Fragment() {
                 swipeRefreshView.isRefreshing = false
             }
 
-            val newPhotos = viewState.photos
-            recyclerAdapter.submitPhotos(newPhotos)
+            val newItems = buildList<CuratedPhotoFeedItem> {
+                newPhotos.forEach {
+                    add(CuratedPhotoFeedItem.Photo(it))
+                }
+                if (viewState.loadingMore && newPhotos.isNotEmpty()) {
+                    add(CuratedPhotoFeedItem.LoaderPlaceholder(0))
+                }
+            }
+
+            recyclerAdapter.submitList(newItems)
         }
     }
 

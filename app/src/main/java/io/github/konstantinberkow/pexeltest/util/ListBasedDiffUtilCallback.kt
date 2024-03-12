@@ -14,7 +14,23 @@ abstract class ListBasedDiffUtilCallback<T>(
         return newList.size
     }
 
-    protected fun getOldItemAt(position: Int): T = oldList[position]
+    final override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return areItemsTheSame(oldList[oldItemPosition], newList[newItemPosition])
+    }
 
-    protected fun getNewItemAt(position: Int): T = newList[position]
+    final override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return areContentsTheSame(oldList[oldItemPosition], newList[newItemPosition])
+    }
+
+    final override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
+        return getChangePayload(oldList[oldItemPosition], newList[newItemPosition])
+    }
+
+    abstract fun areItemsTheSame(oldItem: T, newItem: T): Boolean
+
+    abstract fun areContentsTheSame(oldItem: T, newItem: T): Boolean
+
+    fun getChangePayload(oldItem: T, newItem: T): Any? {
+        return null
+    }
 }

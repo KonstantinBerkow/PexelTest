@@ -3,6 +3,7 @@ package io.github.konstantinberkow.pexeltest.curated
 import android.graphics.Color
 
 data class PexelPhotoItem(
+    @JvmField
     val id: Long,
     val photographerName: String,
     val src: String,

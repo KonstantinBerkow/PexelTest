@@ -16,6 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.R
 import io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment
+import io.github.konstantinberkow.pexeltest.util.BindableViewHolder
 import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
 import io.github.konstantinberkow.pexeltest.util.MixedTypesAdapter
 import io.github.konstantinberkow.pexeltest.util.ViewHolderConfig
@@ -30,7 +31,7 @@ class CuratedPhotosFragment : Fragment() {
 
     private var loadMoreScrollListener: LoadMoreScrollListener? = null
 
-    private var adapter: MixedTypesAdapter<CuratedPhotoFeedItem>? = null
+    private var adapter: MixedTypesAdapter? = null
 
     private lateinit var viewModel: CuratedPhotosViewModel
 
@@ -46,9 +47,9 @@ class CuratedPhotosFragment : Fragment() {
         }
         val glide = Glide.with(this)
 
-        val configs = SparseArray<ViewHolderConfig<CuratedPhotoFeedItem>>().apply {
+        val configs = SparseArray<ViewHolderConfig>().apply {
             put(
-                CuratedPhotoFeedItem.Types.PHOTO,
+                CuratedPhotoFeedItems.PHOTO,
                 ViewHolderConfig(
                     layoutId = R.layout.photo_item_view,
                     holderFactory = { itemView ->
@@ -56,22 +57,22 @@ class CuratedPhotosFragment : Fragment() {
                             itemView = itemView,
                             onPhotoClicked = onPhotoClicked,
                             imageLoader = glide
-                        )
+                        ) as BindableViewHolder<Any>
                     }
-                ) as ViewHolderConfig<CuratedPhotoFeedItem>
+                )
             )
             put(
-                CuratedPhotoFeedItem.Types.LOADER,
+                CuratedPhotoFeedItems.LOADER,
                 ViewHolderConfig(
                     layoutId = R.layout.loader_item,
                     holderFactory = { LoaderItemViewHolder(it) }
-                ) as ViewHolderConfig<CuratedPhotoFeedItem>
+                )
             )
         }
 
         adapter = MixedTypesAdapter(
             viewHolderConfigs = configs,
-            diffConfig = AsyncDifferConfig.Builder(CuratedPhotoFeedItem.ItemCallbackFactory)
+            diffConfig = AsyncDifferConfig.Builder(CuratedPhotoFeedItems.ItemCallbackFactory)
                 .build()
         )
 
@@ -139,10 +140,10 @@ class CuratedPhotosFragment : Fragment() {
 
             val newItems = buildList {
                 newPhotos.forEach {
-                    add(CuratedPhotoFeedItem.Photo(it))
+                    add(CuratedPhotoFeedItems.wrapPhoto(it))
                 }
                 if (viewState.loadingMore && newPhotos.isNotEmpty()) {
-                    add(CuratedPhotoFeedItem.LoaderPlaceholder(0))
+                    add(CuratedPhotoFeedItems.wrapLoader(0L))
                 }
             }
 

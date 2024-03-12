@@ -10,10 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.Collections
 import java.util.IdentityHashMap
 
-class MixedTypesAdapter<T : BindableItem>(
-    private val viewHolderConfigs: SparseArray<ViewHolderConfig<T>>,
-    diffConfig: AsyncDifferConfig<T>
-) : ListAdapter<T, BindableViewHolder<T>>(diffConfig) {
+class MixedTypesAdapter(
+    private val viewHolderConfigs: SparseArray<ViewHolderConfig>,
+    diffConfig: AsyncDifferConfig<BindableItem<out Any>>
+) : ListAdapter<BindableItem<out Any>, BindableViewHolder<Any>>(diffConfig) {
 
     private val cachedInflaters: MutableMap<RecyclerView, LayoutInflater> = IdentityHashMap()
 
@@ -41,38 +41,39 @@ class MixedTypesAdapter<T : BindableItem>(
         cachedInflaters.remove(recyclerView)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindableViewHolder<T> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindableViewHolder<Any> {
         val inflater = cachedInflaters[parent] ?: getLayoutInflater(parent)
         val config = viewHolderConfigs.get(viewType)
         val itemView = inflater.inflate(config.layoutId, parent, false)
         return config.holderFactory(itemView)
     }
 
-    override fun onBindViewHolder(holder: BindableViewHolder<T>, position: Int) {
+    override fun onBindViewHolder(holder: BindableViewHolder<Any>, position: Int) {
         val item = getItem(position)
-        holder.bind(item, Collections.emptyList())
+        holder.bind(item.data, Collections.emptyList())
     }
 
     override fun onBindViewHolder(
-        holder: BindableViewHolder<T>,
+        holder: BindableViewHolder<Any>,
         position: Int,
         payloads: MutableList<Any>
     ) {
         val item = getItem(position)
-        holder.bind(item, payloads)
+        holder.bind(item.data, payloads)
     }
 
-    override fun onViewRecycled(holder: BindableViewHolder<T>) {
+    override fun onViewRecycled(holder: BindableViewHolder<Any>) {
         holder.recycle()
     }
 }
 
-data class ViewHolderConfig<T : BindableItem>(
+data class ViewHolderConfig(
     val layoutId: Int,
-    val holderFactory: (View) -> BindableViewHolder<T>
+    val holderFactory: (View) -> BindableViewHolder<Any>,
 )
 
-interface BindableItem {
-    val id: Long
-    val type: Int
-}
+data class BindableItem<T>(
+    val id: Long,
+    val type: Int,
+    val data: T
+)

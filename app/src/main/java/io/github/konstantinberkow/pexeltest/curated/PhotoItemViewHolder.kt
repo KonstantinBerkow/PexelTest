@@ -13,7 +13,7 @@ class PhotoItemViewHolder(
     itemView: View,
     onPhotoClicked: (PexelPhotoItem) -> Unit,
     private val imageLoader: RequestManager
-) : BindableViewHolder<CuratedPhotoFeedItem.Photo>(itemView) {
+) : BindableViewHolder<PexelPhotoItem>(itemView) {
 
     private val cardView: CardView
     private val photoImageView: ImageView
@@ -26,22 +26,20 @@ class PhotoItemViewHolder(
 
         itemView.setOnClickListener {
             withData {
-                onPhotoClicked(it.pexelPhotoItem)
+                onPhotoClicked(it)
             }
         }
     }
 
-    override fun onBind(data: CuratedPhotoFeedItem.Photo, payloads: List<Any?>) {
-        val photo = data.pexelPhotoItem
+    override fun onBind(data: PexelPhotoItem, payloads: List<Any?>) {
+        cardView.setCardBackgroundColor(data.averageColor)
 
-        cardView.setCardBackgroundColor(photo.averageColor)
-
-        authorTextView.text = photo.photographerName
-        authorTextView.setBackgroundColor(inverseColor(photo.averageColor))
+        authorTextView.text = data.photographerName
+        authorTextView.setBackgroundColor(inverseColor(data.averageColor))
 
         imageLoader.clear(photoImageView)
 
-        imageLoader.load(photo.src)
+        imageLoader.load(data.src)
             .placeholder(R.mipmap.ic_launcher)
             .into(photoImageView)
     }

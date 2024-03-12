@@ -29,8 +29,12 @@ class MixedTypesAdapter<T : BindableItem>(
         return getItem(position).type
     }
 
+    private fun getLayoutInflater(parent: ViewGroup): LayoutInflater {
+        return LayoutInflater.from(parent.context)
+    }
+
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        cachedInflaters[recyclerView] = LayoutInflater.from(recyclerView.context)
+        cachedInflaters[recyclerView] = getLayoutInflater(recyclerView)
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -38,7 +42,7 @@ class MixedTypesAdapter<T : BindableItem>(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindableViewHolder<T> {
-        val inflater = cachedInflaters[parent]!!
+        val inflater = cachedInflaters[parent] ?: getLayoutInflater(parent)
         val config = viewHolderConfigs.get(viewType)
         val itemView = inflater.inflate(config.layoutId, parent, false)
         return config.holderFactory(itemView)

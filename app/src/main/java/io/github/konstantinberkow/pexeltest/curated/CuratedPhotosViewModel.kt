@@ -133,7 +133,7 @@ class CuratedPhotosViewModel(
         val newState = when (result) {
             is PhotoMediator.Result.Failure -> {
                 lastState.copy(
-                    showingFreshData = true,
+                    showingFreshData = false,
                     error = result.msg,
                     hasMore = false,
                     status = CuratedPhotosState.Status.IDLE

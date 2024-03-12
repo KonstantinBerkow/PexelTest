@@ -116,8 +116,10 @@ class PhotoDetailFragment : Fragment() {
         authorNameTextView.text = photo.authorName
         authorCard.visibility = View.VISIBLE
 
-        authorCard.setOnClickListener {
-            openAuthorUrlInBrowser(photo.authorUrl)
+        photo.authorUrl?.let { url ->
+            authorCard.setOnClickListener {
+                openAuthorUrlInBrowser(url)
+            }
         }
     }
 

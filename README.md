@@ -9,7 +9,7 @@
 - [x] Swipe to refresh
 - [x] Full photo page
 - [x] Photo cache
-- [ ] Data cache
+- [x] Data cache (via sqlite database)
 
 # Installation
 Via comand line:

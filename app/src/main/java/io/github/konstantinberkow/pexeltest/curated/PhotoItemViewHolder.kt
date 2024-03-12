@@ -41,7 +41,7 @@ class PhotoItemViewHolder(
 
         imageLoader.clear(photoImageView)
 
-        imageLoader.load(photo.srcSmall)
+        imageLoader.load(photo.src)
             .placeholder(R.mipmap.ic_launcher)
             .into(photoImageView)
     }

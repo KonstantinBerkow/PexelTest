@@ -211,8 +211,7 @@ object ToViewItem : (DbPhotoWithUrl) -> PexelPhotoItem {
     override fun invoke(dbPhoto: DbPhotoWithUrl): PexelPhotoItem = PexelPhotoItem(
         id = dbPhoto.id,
         photographerName = dbPhoto.authorName,
-        srcSmall = dbPhoto.imageUrl,
-        srcLarge = dbPhoto.imageUrl,
+        src = dbPhoto.imageUrl,
         averageColor = dbPhoto.averageColor
     )
 }

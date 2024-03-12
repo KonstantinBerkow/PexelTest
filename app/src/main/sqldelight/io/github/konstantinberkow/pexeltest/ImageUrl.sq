@@ -5,7 +5,7 @@ CREATE TABLE image_url (
 );
 
 insert:
-INSERT INTO image_url(photo_id, qualifier, query)
+INSERT OR REPLACE INTO image_url(photo_id, qualifier, query)
 VALUES (?, ?, ?);
 
 deleteAll:

@@ -16,6 +16,6 @@ interface PexelPhotoStore {
 data class DbPhotoWithUrl(
     val id: Long,
     val authorName: String,
-    val averageColor: Long,
+    val averageColor: Int,
     val imageUrl: String,
 )

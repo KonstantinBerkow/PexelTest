@@ -8,117 +8,161 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.map
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
-import io.github.konstantinberkow.pexeltest.network.PexelApi
-import io.github.konstantinberkow.pexeltest.network.PexelPhoto
-import io.github.konstantinberkow.pexeltest.network.PexelPhotoPage
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
-private const val PAGE_SIZE = 15
+import io.github.konstantinberkow.pexeltest.cache.DbPhotoWithUrl
+import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
+import io.github.konstantinberkow.pexeltest.cache.SizeSpecifier
+import io.github.konstantinberkow.pexeltest.data.PhotoMediator
+import java.util.concurrent.Executor
 
 private const val TAG = "CuratedPhotosViewModel"
 
 class CuratedPhotosViewModel(
-    private val pexelApiProvider: () -> PexelApi
+    private val photoStore: PexelPhotoStore,
+    private val mediator: PhotoMediator,
+    private val executor: Executor
 ) : ViewModel() {
 
-    private val state = MutableLiveData(
-        CuratedPhotosState(
-            loadedPhotos = emptyList(),
-            currentPage = 0,
-            hasMore = true,
-            status = CuratedPhotosState.Status.IDLE
+    private fun getPhotosFromDb(): List<PexelPhotoItem> {
+        val photos = photoStore.getCuratedPhotos(specifier = SizeSpecifier.LARGE)
+        return photos.map(ToViewItem)
+    }
+
+    private fun queryCache(onData: (List<PexelPhotoItem>) -> Unit) {
+        executor.execute {
+            val cachedPhotos = getPhotosFromDb()
+            onData(cachedPhotos)
+        }
+    }
+
+    private val exposed: MutableLiveData<CuratedPhotosState> by lazy(LazyThreadSafetyMode.NONE) {
+        val stateLiveData = MutableLiveData(
+            CuratedPhotosState(
+                loadedPhotos = emptyList(),
+                showingFreshData = false,
+                error = null,
+                currentPage = 0,
+                hasMore = false,
+                status = CuratedPhotosState.Status.LOADING
+            )
         )
-    )
+
+        queryCache {
+            stateLiveData.postValue(
+                CuratedPhotosState(
+                    loadedPhotos = it,
+                    showingFreshData = false,
+                    error = null,
+                    currentPage = 0,
+                    hasMore = false,
+                    status = CuratedPhotosState.Status.IDLE
+                )
+            )
+        }
+
+        stateLiveData.observeForever { state ->
+            Log.d(TAG, "New state: ${state.compactPrint()}")
+            if (state.status == CuratedPhotosState.Status.IDLE
+                && !state.showingFreshData
+                && state.loadedPhotos.isEmpty()
+            ) {
+                // load fresh data if cache is empty
+                refresh()
+            }
+        }
+
+        stateLiveData
+    }
 
     fun observePhotos(): LiveData<ViewState> {
-        loadMoreIfEmptyAndIdle()
-        return state.map { internalState ->
-            val errorMsg = internalState.error?.let {
-                when (it) {
-                    CuratedPhotosState.Error.NO_CONNECTION -> "Failed to load content!"
-                    CuratedPhotosState.Error.QUOTA_EXCEEDED -> "Quota exceeded, please wait"
-                    CuratedPhotosState.Error.UNKNOWN -> "Unknown error"
-                }
-            }
-
+        return exposed.map { state ->
             ViewState(
-                photos = internalState.loadedPhotos,
-                loadingMore = internalState.status == CuratedPhotosState.Status.LOADING,
-                errorMsg = errorMsg
+                photos = state.loadedPhotos,
+                loadingMore = state.status == CuratedPhotosState.Status.LOADING,
+                errorMsg = state.error
             )
         }
     }
 
-    private fun loadMoreIfEmptyAndIdle() {
-        val currentState = state.value ?: return
-        if (currentState.loadedPhotos.isEmpty() && currentState.status == CuratedPhotosState.Status.IDLE && currentState.hasMore) {
-            performLoad(currentState)
-        }
-    }
-
     fun loadMore() {
-        val currentState = state.value ?: return
-        if (currentState.hasMore && currentState.status == CuratedPhotosState.Status.IDLE) {
-            performLoad(currentState)
+        Log.d(TAG, "load more dispatched")
+        val lastState = exposed.value ?: return
+
+        if (lastState.status == CuratedPhotosState.Status.LOADING) {
+            // already doing something
+            return
+        }
+
+        if (!lastState.showingFreshData) {
+            // has to try refresh
+            refresh()
+        } else if (lastState.hasMore) {
+            // already paging
+            val nextPage = lastState.currentPage + 1
+            val transientState = lastState.copy(
+                status = CuratedPhotosState.Status.LOADING
+            )
+            exposed.value = transientState
+            mediator.performAction(PhotoMediator.Action.LoadPage(nextPage)) { result ->
+                handleResult(result, transientState)
+            }
+        } else {
+            // unhandled state
         }
     }
 
     fun refresh() {
-        val currentState = state.value ?: return
-        Log.d(TAG, "perform refresh, current state: $currentState")
+        Log.d(TAG, "refresh dispatched")
+        val lastState = exposed.value ?: return
 
-        val transientState = CuratedPhotosState(
-            loadedPhotos = emptyList(),
-            currentPage = 0,
-            hasMore = true,
-            status = CuratedPhotosState.Status.IDLE
-        )
-        state.value = transientState
+        if (lastState.status == CuratedPhotosState.Status.LOADING) {
+            // already doing something
+            return
+        }
 
-        performLoad(transientState)
-    }
-
-    private fun performLoad(currentState: CuratedPhotosState) {
-        Log.d(TAG, "performLoad, current state: $currentState")
-
-        val nextPage = currentState.currentPage + 1
-        val transientState = currentState.copy(
-            error = null,
-            currentPage = nextPage,
+        val transientState = lastState.copy(
             status = CuratedPhotosState.Status.LOADING
         )
-        state.value = transientState
+        exposed.value = transientState
+        mediator.performAction(PhotoMediator.Action.Refresh) { result ->
+            handleResult(result, transientState)
+        }
+    }
 
-        pexelApiProvider().curatedPhotos(
-            nextPage,
-            PAGE_SIZE
-        ).enqueue(object : Callback<PexelPhotoPage> {
-            override fun onResponse(
-                call: Call<PexelPhotoPage>,
-                response: Response<PexelPhotoPage>
-            ) {
-                Log.d(TAG, "Response code: ${response.code()}, message: ${response.message()}")
-                response.body()?.let { body ->
-                    val newState = transientState.copy(
-                        currentPage = body.page,
-                        loadedPhotos = transientState.loadedPhotos + body.photos.map(ToViewPhoto),
-                        status = CuratedPhotosState.Status.IDLE
-                    )
-                    state.postValue(newState)
-                }
-            }
-
-            override fun onFailure(call: Call<PexelPhotoPage>, error: Throwable) {
-                Log.e(TAG, "Failed to get curated photos", error)
-                val newState = transientState.copy(
-                    currentPage = transientState.currentPage - 1,
+    private fun handleResult(result: PhotoMediator.Result, lastState: CuratedPhotosState) {
+        Log.d(TAG, "result: $result, last state: ${lastState.compactPrint()}")
+        val newState = when (result) {
+            is PhotoMediator.Result.Failure -> {
+                lastState.copy(
+                    showingFreshData = true,
+                    error = result.msg,
+                    hasMore = false,
                     status = CuratedPhotosState.Status.IDLE
                 )
-                state.postValue(newState)
             }
-        })
+            is PhotoMediator.Result.Success -> {
+                val newPhotos = getPhotosFromDb()
+                when (val action = result.action) {
+                    is PhotoMediator.Action.LoadPage -> lastState.copy(
+                        loadedPhotos = newPhotos,
+                        showingFreshData = true,
+                        error = null,
+                        currentPage = action.page,
+                        hasMore = newPhotos.size > lastState.loadedPhotos.size,
+                        status = CuratedPhotosState.Status.IDLE
+                    )
+                    PhotoMediator.Action.Refresh -> lastState.copy(
+                        loadedPhotos = newPhotos,
+                        showingFreshData = true,
+                        error = null,
+                        currentPage = 1,
+                        hasMore = true,
+                        status = CuratedPhotosState.Status.IDLE
+                    )
+                }
+            }
+        }
+
+        exposed.postValue(newState)
     }
 
     data class ViewState(
@@ -133,28 +177,50 @@ class CuratedPhotosViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
             require(modelClass == CuratedPhotosViewModel::class.java)
             val app = extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
+            val deps = app.dependenciesContainer
             return CuratedPhotosViewModel(
-                pexelApiProvider = { app.dependenciesContainer.pexelApi }
+                photoStore = deps.pexelPhotoStore,
+                mediator = deps.photoMediator,
+                executor = deps.ioExecutor
             ) as T
         }
     }
 }
 
-private object ToViewPhoto : (PexelPhoto) -> PexelPhotoItem {
-    override fun invoke(fullPhoto: PexelPhoto): PexelPhotoItem {
-        return PexelPhotoItem(
-            id = fullPhoto.id,
-            photographerName = fullPhoto.photographer,
-            srcSmall = fullPhoto.src["medium"] ?: "",
-            srcLarge = fullPhoto.src["large"] ?: "",
-            averageColor = fullPhoto.averageColor
+private fun CuratedPhotosState.compactPrint(): String {
+    return buildString {
+        append('{')
+        append("showingFreshData: $showingFreshData, ")
+        error?.let {
+            append("error: $it, ")
+        }
+        append("currentPage: $currentPage, ")
+        append("hasMore: $hasMore, ")
+        append("status: $status, ")
+        loadedPhotos.joinTo(
+            buffer = this,
+            prefix = "photos: [",
+            postfix = "]",
+            transform = { it.id.toString() }
         )
+        append('}')
     }
+}
+
+object ToViewItem : (DbPhotoWithUrl) -> PexelPhotoItem {
+    override fun invoke(dbPhoto: DbPhotoWithUrl): PexelPhotoItem = PexelPhotoItem(
+        id = dbPhoto.id,
+        photographerName = dbPhoto.authorName,
+        srcSmall = dbPhoto.imageUrl,
+        srcLarge = dbPhoto.imageUrl,
+        averageColor = dbPhoto.averageColor
+    )
 }
 
 private data class CuratedPhotosState(
     val loadedPhotos: List<PexelPhotoItem>,
-    val error: Error? = null,
+    val showingFreshData: Boolean,
+    val error: String? = null,
     val currentPage: Int,
     val hasMore: Boolean,
     val status: Status
@@ -163,11 +229,5 @@ private data class CuratedPhotosState(
     enum class Status {
         IDLE,
         LOADING
-    }
-
-    enum class Error {
-        NO_CONNECTION,
-        QUOTA_EXCEEDED,
-        UNKNOWN
     }
 }

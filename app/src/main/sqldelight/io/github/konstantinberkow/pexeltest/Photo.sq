@@ -5,7 +5,7 @@ CREATE TABLE photo (
 );
 
 insert:
-INSERT INTO photo(_id, author_name, average_color)
+INSERT OR REPLACE INTO photo(_id, author_name, average_color)
 VALUES (?, ?, ?);
 
 selectPhotosForQualifier:

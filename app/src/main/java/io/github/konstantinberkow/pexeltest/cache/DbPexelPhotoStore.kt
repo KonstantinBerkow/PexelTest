@@ -2,10 +2,13 @@ package io.github.konstantinberkow.pexeltest.cache
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.ImageUrlQueries
 import io.github.konstantinberkow.pexeltest.PhotoQueries
+
+private const val TAG = "DbPexelPhotoStore"
 
 class DbPexelPhotoStore(
     context: Context,
@@ -26,12 +29,13 @@ class DbPexelPhotoStore(
         photo: DbPhoto
     ) {
         val photoId = photo.id
-        photoQueries.insert(photoId, photo.authorName, photo.averageColor)
+        photoQueries.insert(photoId, photo.authorName, photo.averageColor.toLong())
         photo.src.forEach { (key, url) ->
             SizeSpecifier.fromString(key)?.let { specifier ->
                 // photoBasePath + "/:id/pexels-photo-20423561.jpeg?query=...
-                val query = Uri.parse(url).query
-                imageUrlQueries.insert(photoId, specifier.intValue.toLong(), query ?: "")
+                val query = Uri.parse(url).query ?: ""
+                Log.v(TAG, "extracted query: $query")
+                imageUrlQueries.insert(photoId, specifier.intValue.toLong(), query)
             }
         }
     }
@@ -96,19 +100,20 @@ private class MapSelectResultToPhotoWirthUrl(
         averageColor: Long,
         query: String
     ): DbPhotoWithUrl {
-        // photoBasePath + "/:id/pexels-photo-20423561.jpeg?query=...
+        // photoBasePath + "/:id/pexels-photo-:id.jpeg?query=...
         val strId = id.toString()
         val fullUrl = baseUri.buildUpon()
             .appendPath(strId)
-            .appendPath("pexels-photo-$id.jpeg")
-            .query(query)
+            .appendPath("pexels-photo-$strId.jpeg")
+            .encodedQuery(query)
             .build()
-
+        val restoredUrl = fullUrl.toString()
+        Log.v(TAG, "Restored url: $restoredUrl")
         return DbPhotoWithUrl(
             id = id,
             authorName = authorName,
-            averageColor = averageColor,
-            imageUrl = fullUrl.toString()
+            averageColor = averageColor.toInt(),
+            imageUrl = restoredUrl
         )
     }
 }

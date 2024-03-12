@@ -6,6 +6,7 @@ import android.util.Log
 import com.google.gson.GsonBuilder
 import io.github.konstantinberkow.pexeltest.BuildConfig
 import io.github.konstantinberkow.pexeltest.cache.DbPexelPhotoStore
+import io.github.konstantinberkow.pexeltest.data.CombinedPhotoMediator
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
 import io.github.konstantinberkow.pexeltest.network.PexelPhotoGsonAdapter
@@ -15,6 +16,8 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 private const val TAG = "AppDependenciesContainer"
 
@@ -64,5 +67,22 @@ class AppDependenciesContainer(
 
         Log.d(TAG, "Create api instance")
         retrofitInstance.create(PexelApi::class.java)
+    }
+
+    val ioExecutor by lazy {
+        Log.d(TAG, "Create IO executor")
+        val threadCounter = AtomicInteger()
+        Executors.newCachedThreadPool { work ->
+            Thread(work, "App-IO-Thread-${threadCounter.incrementAndGet()}")
+        }
+    }
+
+    val photoMediator by lazy {
+        Log.d(TAG, "Create photoMediator")
+        CombinedPhotoMediator(
+            pexelPhotoStore = pexelPhotoStore,
+            pexelApi = pexelApi,
+            executor = ioExecutor
+        )
     }
 }

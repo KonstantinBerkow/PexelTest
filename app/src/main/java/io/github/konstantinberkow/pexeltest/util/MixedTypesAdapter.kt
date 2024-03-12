@@ -6,16 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import java.util.Collections
-import java.util.IdentityHashMap
+
+private const val TAG = "MixedTypesAdapter"
 
 class MixedTypesAdapter(
     private val viewHolderConfigs: SparseArray<ViewHolderConfig>,
     diffConfig: AsyncDifferConfig<BindableItem<out Any>>
 ) : ListAdapter<BindableItem<out Any>, BindableViewHolder<Any>>(diffConfig) {
-
-    private val cachedInflaters: MutableMap<RecyclerView, LayoutInflater> = IdentityHashMap()
 
     init {
         setHasStableIds(true)
@@ -29,20 +27,8 @@ class MixedTypesAdapter(
         return getItem(position).type
     }
 
-    private fun getLayoutInflater(parent: ViewGroup): LayoutInflater {
-        return LayoutInflater.from(parent.context)
-    }
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        cachedInflaters[recyclerView] = getLayoutInflater(recyclerView)
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        cachedInflaters.remove(recyclerView)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindableViewHolder<Any> {
-        val inflater = cachedInflaters[parent] ?: getLayoutInflater(parent)
+        val inflater = LayoutInflater.from(parent.context)
         val config = viewHolderConfigs.get(viewType)
         val itemView = inflater.inflate(config.layoutId, parent, false)
         return config.holderFactory(itemView)

@@ -1,9 +1,7 @@
 package io.github.konstantinberkow.pexeltest.curated
 
+import androidx.recyclerview.widget.DiffUtil
 import io.github.konstantinberkow.pexeltest.util.BindableItem
-import io.github.konstantinberkow.pexeltest.util.ListBasedDiffUtilCallback
-
-private typealias FeedItems = List<CuratedPhotoFeedItem>
 
 sealed interface CuratedPhotoFeedItem : BindableItem {
 
@@ -12,33 +10,20 @@ sealed interface CuratedPhotoFeedItem : BindableItem {
         override val id: Long
             get() = pexelPhotoItem.id
 
-        override val type: Int = Types.photo
+        override val type: Int = Types.PHOTO
     }
 
     class LoaderPlaceholder(override val id: Long) : CuratedPhotoFeedItem {
 
-        override val type: Int = Types.loader
+        override val type: Int = Types.LOADER
     }
 
     object Types {
-        const val photo: Int = 1
-        const val loader: Int = 2
+        const val PHOTO: Int = 1
+        const val LOADER: Int = 2
     }
 
-    object DiffUtilFactoryCallbackFactory :
-            (FeedItems, FeedItems) -> ListBasedDiffUtilCallback<CuratedPhotoFeedItem> {
-        override fun invoke(
-            oldItems: FeedItems,
-            newItems: FeedItems
-        ): ListBasedDiffUtilCallback<CuratedPhotoFeedItem> {
-            return DiffCallback(oldItems, newItems)
-        }
-    }
-
-    private class DiffCallback(
-        oldItems: FeedItems,
-        newItems: FeedItems
-    ) : ListBasedDiffUtilCallback<CuratedPhotoFeedItem>(oldItems, newItems) {
+    object ItemCallbackFactory : DiffUtil.ItemCallback<CuratedPhotoFeedItem>() {
 
         override fun areItemsTheSame(
             oldItem: CuratedPhotoFeedItem,

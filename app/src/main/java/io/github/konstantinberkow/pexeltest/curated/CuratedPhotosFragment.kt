@@ -9,11 +9,13 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import io.github.konstantinberkow.pexeltest.R
+import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.detail.PhotoDetailFragment
 import io.github.konstantinberkow.pexeltest.util.LoadMoreScrollListener
 import io.github.konstantinberkow.pexeltest.util.MixedTypesAdapter
@@ -47,7 +49,7 @@ class CuratedPhotosFragment : Fragment() {
 
         val configs = SparseArray<ViewHolderConfig<CuratedPhotoFeedItem>>().apply {
             put(
-                CuratedPhotoFeedItem.Types.photo,
+                CuratedPhotoFeedItem.Types.PHOTO,
                 ViewHolderConfig(
                     layoutId = R.layout.photo_item_view,
                     holderFactory = { itemView ->
@@ -60,7 +62,7 @@ class CuratedPhotosFragment : Fragment() {
                 ) as ViewHolderConfig<CuratedPhotoFeedItem>
             )
             put(
-                CuratedPhotoFeedItem.Types.loader,
+                CuratedPhotoFeedItem.Types.LOADER,
                 ViewHolderConfig(
                     layoutId = R.layout.loader_item,
                     holderFactory = { LoaderItemViewHolder(it) }
@@ -68,10 +70,14 @@ class CuratedPhotosFragment : Fragment() {
             )
         }
 
+        val ioExecutor =
+            (requireContext().applicationContext as PexelTestApp).dependenciesContainer.ioExecutor
+
         adapter = MixedTypesAdapter(
             viewHolderConfigs = configs,
-            detectMoves = false,
-            diffUtilCallbackFactory = CuratedPhotoFeedItem.DiffUtilFactoryCallbackFactory
+            diffConfig = AsyncDifferConfig.Builder(CuratedPhotoFeedItem.ItemCallbackFactory)
+                .setBackgroundThreadExecutor(ioExecutor)
+                .build()
         )
 
         viewModel = ViewModelProvider(this, CuratedPhotosViewModel.Factory)

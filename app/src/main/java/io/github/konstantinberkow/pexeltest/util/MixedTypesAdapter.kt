@@ -4,35 +4,29 @@ import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.AsyncDifferConfig
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.util.Collections
 import java.util.IdentityHashMap
 
 class MixedTypesAdapter<T : BindableItem>(
     private val viewHolderConfigs: SparseArray<ViewHolderConfig<T>>,
-    private val detectMoves: Boolean,
-    private val diffUtilCallbackFactory: (List<T>, List<T>) -> DiffUtil.Callback
-) : RecyclerView.Adapter<BindableViewHolder<T>>() {
+    diffConfig: AsyncDifferConfig<T>
+) : ListAdapter<T, BindableViewHolder<T>>(diffConfig) {
 
     private val cachedInflaters: MutableMap<RecyclerView, LayoutInflater> = IdentityHashMap()
-
-    private var currentItems: List<T> = emptyList()
 
     init {
         setHasStableIds(true)
     }
 
-    override fun getItemCount(): Int {
-        return currentItems.size
-    }
-
     override fun getItemId(position: Int): Long {
-        return currentItems[position].id
+        return getItem(position).id
     }
 
     override fun getItemViewType(position: Int): Int {
-        return currentItems[position].type
+        return getItem(position).type
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -51,7 +45,7 @@ class MixedTypesAdapter<T : BindableItem>(
     }
 
     override fun onBindViewHolder(holder: BindableViewHolder<T>, position: Int) {
-        val item = currentItems[position]
+        val item = getItem(position)
         holder.bind(item, Collections.emptyList())
     }
 
@@ -60,20 +54,12 @@ class MixedTypesAdapter<T : BindableItem>(
         position: Int,
         payloads: MutableList<Any>
     ) {
-        val item = currentItems[position]
+        val item = getItem(position)
         holder.bind(item, payloads)
     }
 
     override fun onViewRecycled(holder: BindableViewHolder<T>) {
         holder.recycle()
-    }
-
-    fun submitList(newItems: List<T>) {
-        val oldItems = currentItems
-        val callback = diffUtilCallbackFactory(oldItems, newItems)
-        val diff = DiffUtil.calculateDiff(callback, detectMoves)
-        currentItems = newItems
-        diff.dispatchUpdatesTo(this)
     }
 }
 

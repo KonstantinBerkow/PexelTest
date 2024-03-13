@@ -4,6 +4,8 @@ import android.util.Log
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.ImageUrlQueries
 import io.github.konstantinberkow.pexeltest.PhotoQueries
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val TAG = "DbPexelPhotoStore"
 
@@ -44,51 +46,65 @@ class DbPexelPhotoStore(
         }
     }
 
-    override fun addPhoto(photo: DbPhoto) {
-        val photoQueries = database.photoQueries
-        val imageUrlQueries = database.imageUrlQueries
-        database.transaction {
-            performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
-        }
-    }
-
-    override fun addPhotos(photos: List<DbPhoto>) {
-        val photoQueries = database.photoQueries
-        val imageUrlQueries = database.imageUrlQueries
-        database.transaction {
-            photos.forEach { photo ->
-                performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
+    override suspend fun addPhoto(photo: DbPhoto) {
+        withContext(Dispatchers.Default) {
+            with(database) {
+                transaction {
+                    performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
+                }
             }
         }
     }
 
-    override fun replacePhotos(newPhotos: List<DbPhoto>) {
-        val photoQueries = database.photoQueries
-        val imageUrlQueries = database.imageUrlQueries
-        database.transaction {
-            photoQueries.deleteAll()
-            imageUrlQueries.deleteAll()
-
-            newPhotos.forEach { photo ->
-                performPhotoInsert(photoQueries, imageUrlQueries, photo)
+    override suspend fun addPhotos(photos: List<DbPhoto>) {
+        withContext(Dispatchers.Default) {
+            with(database) {
+                val photoQueries = photoQueries
+                val imageUrlQueries = imageUrlQueries
+                transaction {
+                    photos.forEach { photo ->
+                        performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
+                    }
+                }
             }
         }
     }
 
-    override fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
-        return database.photoQueries
-            .selectPhotosForQualifier(specifier.longValue, mapper)
-            .executeAsList()
+    override suspend fun replacePhotos(newPhotos: List<DbPhoto>) {
+        withContext(Dispatchers.Default) {
+            with(database) {
+                val photoQueries = photoQueries
+                val imageUrlQueries = imageUrlQueries
+                transaction {
+                    photoQueries.deleteAll()
+                    imageUrlQueries.deleteAll()
+
+                    newPhotos.forEach { photo ->
+                        performPhotoInsert(photoQueries, imageUrlQueries, photo)
+                    }
+                }
+            }
+        }
     }
 
-    override fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl {
-        return database.photoQueries
-            .selectPhotoForQualifier(
-                id = id,
-                qualifier = SizeSpecifier.ORIGINAL.longValue,
-                mapper = mapper
-            )
-            .executeAsOne()
+    override suspend fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
+        return withContext(Dispatchers.Default) {
+            database.photoQueries
+                .selectPhotosForQualifier(specifier.longValue, mapper)
+                .executeAsList()
+        }
+    }
+
+    override suspend fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl {
+        return withContext(Dispatchers.Default) {
+            database.photoQueries
+                .selectPhotoForQualifier(
+                    id = id,
+                    qualifier = SizeSpecifier.ORIGINAL.longValue,
+                    mapper = mapper
+                )
+                .executeAsOne()
+        }
     }
 }
 

@@ -14,26 +14,17 @@ import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.cache.SizeSpecifier
 import io.github.konstantinberkow.pexeltest.data.PhotoMediator
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 
 private const val TAG = "CuratedPhotosViewModel"
 
 class CuratedPhotosViewModel(
     private val photoStore: PexelPhotoStore,
     private val mediator: PhotoMediator,
-    private val executor: Executor
 ) : ViewModel() {
 
-    private fun getPhotosFromDb(): List<PexelPhotoItem> {
+    private suspend fun getPhotosFromDb(): List<PexelPhotoItem> {
         val photos = photoStore.getCuratedPhotos(specifier = SizeSpecifier.LARGE)
         return photos.map(ToViewItem)
-    }
-
-    private fun queryCache(onData: (List<PexelPhotoItem>) -> Unit) {
-        executor.execute {
-            val cachedPhotos = getPhotosFromDb()
-            onData(cachedPhotos)
-        }
     }
 
     var pageSize: Int = 5
@@ -54,10 +45,11 @@ class CuratedPhotosViewModel(
             )
         )
 
-        queryCache {
+        viewModelScope.launch {
+            val cachedData = getPhotosFromDb()
             stateLiveData.postValue(
                 CuratedPhotosState(
-                    loadedPhotos = it,
+                    loadedPhotos = cachedData,
                     showingFreshData = false,
                     error = null,
                     currentPage = 0,
@@ -140,7 +132,7 @@ class CuratedPhotosViewModel(
         }
     }
 
-    private fun handleResult(result: PhotoMediator.Result, lastState: CuratedPhotosState) {
+    private suspend fun handleResult(result: PhotoMediator.Result, lastState: CuratedPhotosState) {
         Log.d(TAG, "result: $result, last state: ${lastState.compactPrint()}")
         val newState = when (result) {
             is PhotoMediator.Result.Failure -> {
@@ -196,7 +188,6 @@ class CuratedPhotosViewModel(
             return CuratedPhotosViewModel(
                 photoStore = deps.pexelPhotoStore,
                 mediator = deps.photoMediator,
-                executor = deps.ioExecutor
             ) as T
         }
     }

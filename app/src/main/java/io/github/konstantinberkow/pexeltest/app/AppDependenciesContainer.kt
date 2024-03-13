@@ -16,6 +16,7 @@ import io.github.konstantinberkow.pexeltest.network.PexelPhoto
 import io.github.konstantinberkow.pexeltest.network.PexelPhotoGsonAdapter
 import io.github.konstantinberkow.pexeltest.network.PexelPhotoPage
 import io.github.konstantinberkow.pexeltest.network.PexelPhotoPageGsonAdapter
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -60,7 +61,8 @@ class AppDependenciesContainer(
                 )
                 Database(driver)
             },
-            imageUrlSaveAdapter = pexelPhotImageUrlDbAdapter()
+            imageUrlSaveAdapter = pexelPhotImageUrlDbAdapter(),
+            dbCoroutineContext = Dispatchers.Default
         ).let {
             PexelPhotoStoreLoggingProxy(it)
         }

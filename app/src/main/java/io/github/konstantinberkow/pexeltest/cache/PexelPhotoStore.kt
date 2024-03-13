@@ -6,15 +6,15 @@ private const val TAG = "PexelPhotoStore"
 
 interface PexelPhotoStore {
 
-    fun addPhoto(photo: DbPhoto)
+    suspend fun addPhoto(photo: DbPhoto)
 
-    fun addPhotos(photos: List<DbPhoto>)
+    suspend fun addPhotos(photos: List<DbPhoto>)
 
-    fun replacePhotos(newPhotos: List<DbPhoto>)
+    suspend fun replacePhotos(newPhotos: List<DbPhoto>)
 
-    fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl>
+    suspend fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl>
 
-    fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl
+    suspend fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl
 }
 
 class PexelPhotoStoreLoggingProxy(

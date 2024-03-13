@@ -19,7 +19,7 @@ private const val TAG = "PhotoDetailViewModel"
 
 class PhotoDetailViewModel(
     private val pexelApi: PexelApi,
-    private val photoStore: PexelPhotoStore
+    private val photoStore: PexelPhotoStore,
 ) : ViewModel() {
 
     private val state: MutableLiveData<ViewState> = MutableLiveData(
@@ -112,10 +112,10 @@ class PhotoDetailViewModel(
             require(modelClass == PhotoDetailViewModel::class.java)
             val app =
                 extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
-
+            val deps = app.dependenciesContainer
             return PhotoDetailViewModel(
-                pexelApi = app.dependenciesContainer.pexelApi,
-                photoStore = app.dependenciesContainer.pexelPhotoStore,
+                pexelApi = deps.pexelApi,
+                photoStore = deps.pexelPhotoStore,
             ) as T
         }
     }

@@ -21,27 +21,27 @@ class PexelPhotoStoreLoggingProxy(
     private val delegate: PexelPhotoStore
 ) : PexelPhotoStore {
 
-    override fun addPhoto(photo: DbPhoto) {
+    override suspend fun addPhoto(photo: DbPhoto) {
         Log.d(TAG, "addPhoto: $photo, thread: ${Thread.currentThread()}")
         delegate.addPhoto(photo)
     }
 
-    override fun addPhotos(photos: List<DbPhoto>) {
+    override suspend fun addPhotos(photos: List<DbPhoto>) {
         Log.d(TAG, "addPhotos: $photos, thread: ${Thread.currentThread()}")
         delegate.addPhotos(photos)
     }
 
-    override fun replacePhotos(newPhotos: List<DbPhoto>) {
+    override suspend fun replacePhotos(newPhotos: List<DbPhoto>) {
         Log.d(TAG, "replacePhotos: $newPhotos, thread: ${Thread.currentThread()}")
         delegate.replacePhotos(newPhotos)
     }
 
-    override fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
+    override suspend fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
         Log.d(TAG, "getCuratedPhotos: $specifier, thread: ${Thread.currentThread()}")
         return delegate.getCuratedPhotos(specifier)
     }
 
-    override fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl {
+    override suspend fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl {
         Log.d(TAG, "getPhotoWithOriginal: $id, thread: ${Thread.currentThread()}")
         return delegate.getPhotoWithOriginal(id)
     }

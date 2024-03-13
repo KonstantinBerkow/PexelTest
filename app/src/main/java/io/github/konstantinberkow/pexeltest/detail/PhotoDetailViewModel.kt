@@ -121,6 +121,8 @@ class PhotoDetailViewModel(
     }
 }
 
+
+
 private fun PexelPhoto.toPhotoDetail(): PhotoDetail {
     return PhotoDetail(
         id = id,

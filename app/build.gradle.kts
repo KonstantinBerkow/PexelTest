@@ -54,17 +54,18 @@ sqldelight {
 }
 
 dependencies {
+    implementation(libs.kotlin.coroutines.core)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.swiperefreshlayout)
-    implementation(libs.navigationFragments)
+    implementation(libs.swiperefreshLayout)
+    implementation(libs.navigation.fragments)
 
     implementation(libs.glide)
     implementation(libs.gson)
     implementation(libs.retrofit)
-    implementation(libs.retrofitConverterGson)
+    implementation(libs.retrofit.gson)
     implementation(libs.okhttpInterceptors)
 
     implementation(libs.androidx.multidex)

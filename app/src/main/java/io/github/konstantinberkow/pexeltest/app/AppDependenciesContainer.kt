@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder
 import io.github.konstantinberkow.pexeltest.BuildConfig
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.cache.DbPexelPhotoStore
+import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStoreLoggingProxy
 import io.github.konstantinberkow.pexeltest.data.CombinedPhotoMediator
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
@@ -62,7 +63,9 @@ class AppDependenciesContainer(
                 Database(driver)
             },
             imageUrlSaveAdapter = pexelPhotImageUrlDbAdapter()
-        )
+        ).let {
+            PexelPhotoStoreLoggingProxy(it)
+        }
     }
 
     val gson by lazy {

@@ -11,7 +11,6 @@ import io.github.konstantinberkow.pexeltest.cache.DbPhoto
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -58,21 +57,19 @@ class PhotoDetailViewModel(
         state.value = transientState
 
         viewModelScope.launch {
-            launch(Dispatchers.IO) {
-                val dbPhoto = photoStore.getPhotoWithOriginal(id = photoId)
-                val cachedData = PhotoDetail(
-                    id = dbPhoto.id,
-                    originalImageUrl = dbPhoto.imageUrl,
-                    authorName = dbPhoto.authorName,
-                    authorUrl = null
-                )
-                val newState = transientState.copy(
-                    photoDetail = cachedData
-                )
-                state.postValue(newState)
+            val dbPhoto = photoStore.getPhotoWithOriginal(id = photoId)
+            val cachedData = PhotoDetail(
+                id = dbPhoto.id,
+                originalImageUrl = dbPhoto.imageUrl,
+                authorName = dbPhoto.authorName,
+                authorUrl = null
+            )
+            val newState = transientState.copy(
+                photoDetail = cachedData
+            )
+            state.postValue(newState)
 
-                performNetworkLoad(newState)
-            }
+            performNetworkLoad(newState)
         }
     }
 

@@ -4,14 +4,15 @@ import android.util.Log
 import io.github.konstantinberkow.pexeltest.Database
 import io.github.konstantinberkow.pexeltest.ImageUrlQueries
 import io.github.konstantinberkow.pexeltest.PhotoQueries
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 private const val TAG = "DbPexelPhotoStore"
 
 class DbPexelPhotoStore(
     databaseProvider: () -> Database,
-    private val imageUrlSaveAdapter: ImageUrlSaveContract
+    private val imageUrlSaveAdapter: ImageUrlSaveContract,
+    private val dbCoroutineContext: CoroutineContext
 ) : PexelPhotoStore {
 
     interface ImageUrlSaveContract {
@@ -47,7 +48,7 @@ class DbPexelPhotoStore(
     }
 
     override suspend fun addPhoto(photo: DbPhoto) {
-        withContext(Dispatchers.Default) {
+        withContext(dbCoroutineContext) {
             with(database) {
                 transaction {
                     performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
@@ -57,7 +58,7 @@ class DbPexelPhotoStore(
     }
 
     override suspend fun addPhotos(photos: List<DbPhoto>) {
-        withContext(Dispatchers.Default) {
+        withContext(dbCoroutineContext) {
             with(database) {
                 val photoQueries = photoQueries
                 val imageUrlQueries = imageUrlQueries
@@ -71,7 +72,7 @@ class DbPexelPhotoStore(
     }
 
     override suspend fun replacePhotos(newPhotos: List<DbPhoto>) {
-        withContext(Dispatchers.Default) {
+        withContext(dbCoroutineContext) {
             with(database) {
                 val photoQueries = photoQueries
                 val imageUrlQueries = imageUrlQueries
@@ -88,7 +89,7 @@ class DbPexelPhotoStore(
     }
 
     override suspend fun getCuratedPhotos(specifier: SizeSpecifier): List<DbPhotoWithUrl> {
-        return withContext(Dispatchers.Default) {
+        return withContext(dbCoroutineContext) {
             database.photoQueries
                 .selectPhotosForQualifier(specifier.longValue, mapper)
                 .executeAsList()
@@ -96,7 +97,7 @@ class DbPexelPhotoStore(
     }
 
     override suspend fun getPhotoWithOriginal(id: Long): DbPhotoWithUrl {
-        return withContext(Dispatchers.Default) {
+        return withContext(dbCoroutineContext) {
             database.photoQueries
                 .selectPhotoForQualifier(
                     id = id,

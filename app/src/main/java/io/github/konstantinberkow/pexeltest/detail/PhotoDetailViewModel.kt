@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
+import io.github.konstantinberkow.pexeltest.cache.DbPhoto
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
@@ -84,6 +85,17 @@ class PhotoDetailViewModel(
                         errorMsg = null,
                     )
                     this@PhotoDetailViewModel.state.value = newState
+
+                    executor.execute {
+                        photoStore.addPhoto(
+                            DbPhoto(
+                                id = body.id,
+                                authorName = body.photographer,
+                                averageColor = body.averageColor,
+                                src = body.src
+                            )
+                        )
+                    }
                 }
             }
 

@@ -6,12 +6,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.map
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.cache.DbPhotoWithUrl
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.cache.SizeSpecifier
 import io.github.konstantinberkow.pexeltest.data.PhotoMediator
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
 private const val TAG = "CuratedPhotosViewModel"
@@ -108,9 +110,9 @@ class CuratedPhotosViewModel(
                 status = CuratedPhotosState.Status.LOADING
             )
             exposed.value = transientState
-            mediator.performAction(
-                PhotoMediator.Action.LoadPage(nextPage, pageSize)
-            ) { result ->
+            viewModelScope.launch {
+                val result =
+                    mediator.performAction(PhotoMediator.Action.LoadPage(nextPage, pageSize))
                 handleResult(result, transientState)
             }
         } else {
@@ -131,7 +133,9 @@ class CuratedPhotosViewModel(
             status = CuratedPhotosState.Status.LOADING
         )
         exposed.value = transientState
-        mediator.performAction(PhotoMediator.Action.Refresh(pageSize = pageSize)) { result ->
+
+        viewModelScope.launch {
+            val result = mediator.performAction(PhotoMediator.Action.Refresh(pageSize = pageSize))
             handleResult(result, transientState)
         }
     }
@@ -147,6 +151,7 @@ class CuratedPhotosViewModel(
                     status = CuratedPhotosState.Status.IDLE
                 )
             }
+
             is PhotoMediator.Result.Success -> {
                 val newPhotos = getPhotosFromDb()
                 when (val action = result.action) {
@@ -158,6 +163,7 @@ class CuratedPhotosViewModel(
                         hasMore = newPhotos.size >= lastState.loadedPhotos.size + action.pageSize,
                         status = CuratedPhotosState.Status.IDLE
                     )
+
                     is PhotoMediator.Action.Refresh -> lastState.copy(
                         loadedPhotos = newPhotos,
                         showingFreshData = true,
@@ -184,7 +190,8 @@ class CuratedPhotosViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
             require(modelClass == CuratedPhotosViewModel::class.java)
-            val app = extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
+            val app =
+                extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
             val deps = app.dependenciesContainer
             return CuratedPhotosViewModel(
                 photoStore = deps.pexelPhotoStore,

@@ -1,27 +1,25 @@
 package io.github.konstantinberkow.pexeltest.detail
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.cache.DbPhoto
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.util.concurrent.Executor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 private const val TAG = "PhotoDetailViewModel"
 
 class PhotoDetailViewModel(
     private val pexelApi: PexelApi,
-    private val photoStore: PexelPhotoStore,
-    private val executor: Executor
+    private val photoStore: PexelPhotoStore
 ) : ViewModel() {
 
     private val state: MutableLiveData<ViewState> = MutableLiveData(
@@ -59,54 +57,52 @@ class PhotoDetailViewModel(
         )
         state.value = transientState
 
-        executor.execute {
-            val dbPhoto = photoStore.getPhotoWithOriginal(id = photoId)
-            val cachedData = PhotoDetail(
-                id = dbPhoto.id,
-                originalImageUrl = dbPhoto.imageUrl,
-                authorName = dbPhoto.authorName,
-                authorUrl = null
-            )
-            val newState = transientState.copy(
-                photoDetail = cachedData
-            )
-            state.postValue(newState)
-            performNetworkLoad(newState)
+        viewModelScope.launch {
+            launch(Dispatchers.IO) {
+                val dbPhoto = photoStore.getPhotoWithOriginal(id = photoId)
+                val cachedData = PhotoDetail(
+                    id = dbPhoto.id,
+                    originalImageUrl = dbPhoto.imageUrl,
+                    authorName = dbPhoto.authorName,
+                    authorUrl = null
+                )
+                val newState = transientState.copy(
+                    photoDetail = cachedData
+                )
+                state.postValue(newState)
+
+                performNetworkLoad(newState)
+            }
         }
     }
 
-    private fun performNetworkLoad(state: ViewState) {
-        pexelApi.getPhotoInfo(state.photoId).enqueue(object : Callback<PexelPhoto> {
-            override fun onResponse(call: Call<PexelPhoto>, response: Response<PexelPhoto>) {
-                response.body()?.let { body ->
-                    val newState = state.copy(
-                        photoDetail = body.toPhotoDetail(),
-                        loading = false,
-                        errorMsg = null,
-                    )
-                    this@PhotoDetailViewModel.state.value = newState
+    private suspend fun performNetworkLoad(oldState: ViewState) {
+        val newState = try {
+            val pexelPhoto = pexelApi.getPhotoInfo(oldState.photoId)
+            val newState = oldState.copy(
+                photoDetail = pexelPhoto.toPhotoDetail(),
+                loading = false,
+                errorMsg = null,
+            )
 
-                    executor.execute {
-                        photoStore.addPhoto(
-                            DbPhoto(
-                                id = body.id,
-                                authorName = body.photographer,
-                                averageColor = body.averageColor,
-                                src = body.src
-                            )
-                        )
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<PexelPhoto>, error: Throwable) {
-                Log.e(TAG, "Failed to get photo info", error)
-                this@PhotoDetailViewModel.state.value = state.copy(
-                    loading = false,
-                    errorMsg = error.message
+            photoStore.addPhoto(
+                DbPhoto(
+                    id = pexelPhoto.id,
+                    authorName = pexelPhoto.photographer,
+                    averageColor = pexelPhoto.averageColor,
+                    src = pexelPhoto.src
                 )
-            }
-        })
+            )
+
+            newState
+        } catch (e: HttpException) {
+            oldState.copy(
+                loading = false,
+                errorMsg = "HTTP: ${e.code()}"
+            )
+        }
+
+        state.postValue(newState)
     }
 
     object Factory : ViewModelProvider.Factory {
@@ -114,12 +110,12 @@ class PhotoDetailViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
             require(modelClass == PhotoDetailViewModel::class.java)
-            val app = extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
+            val app =
+                extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PexelTestApp
 
             return PhotoDetailViewModel(
                 pexelApi = app.dependenciesContainer.pexelApi,
                 photoStore = app.dependenciesContainer.pexelPhotoStore,
-                executor = app.dependenciesContainer.ioExecutor
             ) as T
         }
     }

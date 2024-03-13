@@ -5,62 +5,50 @@ import io.github.konstantinberkow.pexeltest.cache.DbPhoto
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
+import retrofit2.HttpException
 import java.io.IOException
 import java.net.SocketTimeoutException
-import java.util.concurrent.Executor
 import java.util.concurrent.TimeoutException
 
 private const val TAG = "CombinedPhotoMediator"
 
 class CombinedPhotoMediator(
     private val pexelPhotoStore: PexelPhotoStore,
-    private val pexelApi: PexelApi,
-    private val executor: Executor
+    private val pexelApi: PexelApi
 ) : PhotoMediator {
 
-    override fun performAction(
-        action: PhotoMediator.Action,
-        callback: (PhotoMediator.Result) -> Unit
-    ) {
+    override suspend fun performAction(action: PhotoMediator.Action): PhotoMediator.Result {
         Log.d(TAG, "perform action: $action")
-        executor.execute {
-            val result = try {
-                val response = when (action) {
-                    is PhotoMediator.Action.LoadPage ->
-                        pexelApi.curatedPhotos(action.page, action.pageSize)
+        val result = try {
+            val body = when (action) {
+                is PhotoMediator.Action.LoadPage ->
+                    pexelApi.curatedPhotos(action.page, action.pageSize)
 
-                    is PhotoMediator.Action.Refresh ->
-                        pexelApi.curatedPhotos(1, action.pageSize)
-                }.execute()
-                val body = response.body()
-                val error = response.errorBody()
-                if (body != null) {
-                    when (action) {
-                        is PhotoMediator.Action.LoadPage ->
-                            body.photos.map(ToDbPhoto).also {
-                                pexelPhotoStore.addPhotos(it)
-                            }
-
-                        is PhotoMediator.Action.Refresh ->
-                            body.photos.map(ToDbPhoto).also {
-                                pexelPhotoStore.replacePhotos(it)
-                            }
-                    }
-                    PhotoMediator.Result.Success(action)
-                } else if (error != null) {
-                    PhotoMediator.Result.Failure(action, error.toString())
-                } else {
-                    PhotoMediator.Result.Failure(action, "Unexpected")
-                }
-            } catch (e: IOException) {
-                PhotoMediator.Result.Failure(action, "IO exception")
-            } catch (e: TimeoutException) {
-                PhotoMediator.Result.Failure(action, "Timeout exception")
-            } catch (e: SocketTimeoutException) {
-                PhotoMediator.Result.Failure(action, "Timeout exception")
+                is PhotoMediator.Action.Refresh ->
+                    pexelApi.curatedPhotos(1, action.pageSize)
             }
-            callback(result)
+            when (action) {
+                is PhotoMediator.Action.LoadPage ->
+                    body.photos.map(ToDbPhoto).also {
+                        pexelPhotoStore.addPhotos(it)
+                    }
+
+                is PhotoMediator.Action.Refresh ->
+                    body.photos.map(ToDbPhoto).also {
+                        pexelPhotoStore.replacePhotos(it)
+                    }
+            }
+            PhotoMediator.Result.Success(action)
+        } catch (e: IOException) {
+            PhotoMediator.Result.Failure(action, "IO exception")
+        } catch (e: TimeoutException) {
+            PhotoMediator.Result.Failure(action, "Timeout exception")
+        } catch (e: SocketTimeoutException) {
+            PhotoMediator.Result.Failure(action, "Timeout exception")
+        } catch (e: HttpException) {
+            PhotoMediator.Result.Failure(action, "HTTP: ${e.code()}")
         }
+        return result
     }
 }
 

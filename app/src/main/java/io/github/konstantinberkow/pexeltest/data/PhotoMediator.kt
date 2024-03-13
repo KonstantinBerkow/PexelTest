@@ -9,7 +9,7 @@ interface PhotoMediator {
         data class LoadPage(val page: Int, val pageSize: Int) : Action
     }
 
-    fun performAction(action: Action, callback: (Result) -> Unit)
+    suspend fun performAction(action: Action): Result
 
     sealed interface Result {
 

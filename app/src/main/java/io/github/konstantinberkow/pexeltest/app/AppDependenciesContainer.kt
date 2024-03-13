@@ -117,7 +117,6 @@ class AppDependenciesContainer(
         CombinedPhotoMediator(
             pexelPhotoStore = pexelPhotoStore,
             pexelApi = pexelApi,
-            executor = ioExecutor
         )
     }
 }

@@ -1,6 +1,5 @@
 package io.github.konstantinberkow.pexeltest.network
 
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Path
@@ -13,14 +12,14 @@ interface PexelApi {
 
     @GET("curated")
     @Headers(AUTH_HEADER)
-    fun curatedPhotos(
+    suspend fun curatedPhotos(
         @Query("page") page: Int,
         @Query("per_page") pageSize: Int
-    ): Call<PexelPhotoPage>
+    ): PexelPhotoPage
 
     @GET("photos/{id}")
     @Headers(AUTH_HEADER)
-    fun getPhotoInfo(
+    suspend fun getPhotoInfo(
         @Path("id") id: Long
-    ): Call<PexelPhoto>
+    ): PexelPhoto
 }

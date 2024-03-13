@@ -15,6 +15,7 @@ okhttp = "4.12.0"
 swiperefresh = "1.2.0-alpha01"
 navigation = "2.7.7"
 sqlDelight = "2.0.1"
+kotlin-coroutines = "1.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,11 +28,12 @@ material = { group = "com.google.android.material", name = "material", version.r
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-retrofitConverterGson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttpInterceptors = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp"}
-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh"}
-navigationFragments = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation"}
+swiperefreshLayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh"}
+navigation-fragments = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation"}
 sqlDelightAndroid = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqlDelight"}
+kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlin-coroutines"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

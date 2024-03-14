@@ -155,7 +155,7 @@ class CuratedPhotosViewModel(
                         showingFreshData = true,
                         error = null,
                         currentPage = action.page,
-                        hasMore = newPhotos.size >= lastState.loadedPhotos.size + action.pageSize,
+                        hasMore = newPhotos.isNotEmpty(),
                         status = CuratedPhotosState.Status.IDLE
                     )
                     is PhotoMediator.Action.Refresh -> lastState.copy(

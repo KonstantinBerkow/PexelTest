@@ -15,13 +15,13 @@ import io.github.konstantinberkow.pexeltest.cache.DbPhotoWithUrl
 import io.github.konstantinberkow.pexeltest.cache.PexelPhotoStore
 import io.github.konstantinberkow.pexeltest.network.PexelApi
 import io.github.konstantinberkow.pexeltest.network.PexelPhoto
+import io.github.konstantinberkow.pexeltest.util.logEach
+import io.github.konstantinberkow.pexeltest.util.logError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -183,10 +183,6 @@ sealed interface PhotoDetailResult {
     data class Failure(val errorMsg: String) : PhotoDetailResult
 }
 
-inline fun log(tag: String, msg: () -> String) {
-    Log.d(tag, msg())
-}
-
 class PhotoDetailViewModel(
     private val pexelApi: PexelApi,
     private val photoStore: PexelPhotoStore,
@@ -196,9 +192,7 @@ class PhotoDetailViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val photoDetailResultsFlow = savedStateHandle.getStateFlow("photo_id", 0L)
         .filter { it > 0 }
-        .onEach {
-            log(TAG) { "next action: Load($it)" }
-        }
+        .logEach(TAG) { "next action: Load($it)" }
         .flatMapLatest { photoId ->
             flow {
                 val loading = PhotoDetailResult.Loading(photoId = photoId)
@@ -218,18 +212,12 @@ class PhotoDetailViewModel(
                 }
             }
         }
-        .onEach {
-            log(TAG) { "next result: $it" }
-        }
+        .logEach(TAG) { "next result: $it" }
         .scan(PhotoDetailState.Initial as PhotoDetailState) { acc, result ->
             acc.reduce(result)
         }
-        .onEach {
-            log(TAG) { "next state: $it" }
-        }
-        .catch { exception ->
-            log(TAG) { "unhandled exception: $exception" }
-        }
+        .logEach(TAG) { "next state: $it" }
+        .logError(TAG) { "unhandled exception: $it" }
 
     private val hiddenState = MutableLiveData<PhotoDetailState>()
 

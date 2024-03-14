@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -39,7 +40,12 @@ class PhotoDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         this.viewModel = ViewModelProvider(this, PhotoDetailViewModel.Factory)
-            .get(PhotoDetailViewModel::class.java)
+            .get(PhotoDetailViewModel::class.java).also {
+                it.exposedState
+                    .observe(this) { newState ->
+                        render(newState)
+                    }
+            }
     }
 
     override fun onCreateView(
@@ -65,18 +71,41 @@ class PhotoDetailFragment : Fragment() {
             return
         }
 
-        viewModel.getPhoto(photoId).observe(this) { state ->
-            val photoInfo = state.photoDetail
-            if (photoInfo != null) {
-                showPhoto(photoInfo)
-            } else {
+        viewModel.getPhoto(photoId)
+    }
+
+    private fun render(newState: PhotoDetailState) {
+        when (newState) {
+            PhotoDetailState.Initial -> {
+                loadProgressBar.visibility = View.VISIBLE
                 hideInfo()
             }
 
-            loadProgressBar.visibility = if (state.loading || !photoLoaded) {
-                View.VISIBLE
-            } else {
-                View.GONE
+            is PhotoDetailState.Loading -> {
+                loadProgressBar.visibility = View.VISIBLE
+                hideInfo()
+            }
+
+            is PhotoDetailState.Refreshing -> {
+                loadProgressBar.visibility = View.VISIBLE
+                showInfo(newState.photo)
+            }
+
+            is PhotoDetailState.Idle -> {
+                loadProgressBar.visibility = View.GONE
+                showInfo(newState.photo)
+            }
+
+            is PhotoDetailState.Error -> {
+                val photo = newState.loadedPhoto
+                if (photo != null) {
+                    loadProgressBar.visibility = View.GONE
+                    showInfo(photo)
+                } else {
+                    loadProgressBar.visibility = View.GONE
+                    hideInfo()
+                }
+                Toast.makeText(requireContext(), newState.errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -86,32 +115,34 @@ class PhotoDetailFragment : Fragment() {
         loadProgressBar.visibility = View.GONE
     }
 
-    private fun showPhoto(photo: PhotoDetail) {
-        Glide.with(this)
-            .load(photo.originalImageUrl)
-            .listener(object : RequestListener<Drawable> {
-                override fun onLoadFailed(
-                    e: GlideException?,
-                    model: Any?,
-                    target: Target<Drawable>,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    notifyPhotoLoaded()
-                    return false
-                }
+    private fun showInfo(photo: PhotoDetail) {
+        if (!photoLoaded) {
+            Glide.with(this)
+                .load(photo.originalImageUrl)
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        notifyPhotoLoaded()
+                        return false
+                    }
 
-                override fun onResourceReady(
-                    resource: Drawable,
-                    model: Any,
-                    target: Target<Drawable>?,
-                    dataSource: DataSource,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    notifyPhotoLoaded()
-                    return false
-                }
-            })
-            .into(photoImageView)
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        notifyPhotoLoaded()
+                        return false
+                    }
+                })
+                .into(photoImageView)
+        }
 
         authorNameTextView.text = photo.authorName
         authorCard.visibility = View.VISIBLE

@@ -8,5 +8,9 @@ insert:
 INSERT OR REPLACE INTO image_url(photo_id, qualifier, query)
 VALUES (?, ?, ?);
 
+deleteByPhotoId:
+DELETE FROM image_url
+WHERE photo_id == :id;
+
 deleteAll:
 DELETE FROM image_url;

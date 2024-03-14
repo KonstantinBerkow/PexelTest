@@ -27,10 +27,14 @@ class DbPexelPhotoStore(
     private fun performPhotoInsert(
         photoQueries: PhotoQueries,
         imageUrlQueries: ImageUrlQueries,
-        photo: DbPhoto
+        photo: DbPhoto,
+        deleteOldUrls: Boolean = false
     ) {
         val photoId = photo.id
         photoQueries.insert(photoId, photo.authorName, photo.averageColor.toLong())
+        if (deleteOldUrls) {
+            imageUrlQueries.deleteByPhotoId(photoId)
+        }
         photo.src.forEach { (key, url) ->
             SizeSpecifier.fromString(key)?.let { specifier ->
                 val partToSave = imageUrlSaveAdapter.extractPartToSave(url)
@@ -44,7 +48,7 @@ class DbPexelPhotoStore(
         val photoQueries = database.photoQueries
         val imageUrlQueries = database.imageUrlQueries
         database.transaction {
-            performPhotoInsert(photoQueries, imageUrlQueries, photo)
+            performPhotoInsert(photoQueries, imageUrlQueries, photo, true)
         }
     }
 

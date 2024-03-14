@@ -2,10 +2,10 @@ package io.github.konstantinberkow.pexeltest.detail
 
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -19,11 +19,12 @@ import io.github.konstantinberkow.pexeltest.util.logEach
 import io.github.konstantinberkow.pexeltest.util.logError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
@@ -216,23 +217,19 @@ class PhotoDetailViewModel(
         .scan(PhotoDetailState.Initial as PhotoDetailState) { acc, result ->
             acc.reduce(result)
         }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = PhotoDetailState.Initial
+        )
         .logEach(TAG) { "next state: $it" }
         .logError(TAG) { "unhandled exception: $it" }
 
-    private val hiddenState = MutableLiveData<PhotoDetailState>()
-
     val exposedState: LiveData<PhotoDetailState>
-        get() = hiddenState
+        get() = photoDetailResultsFlow.asLiveData()
 
     fun getPhoto(photoId: Long) {
         savedStateHandle["photo_id"] = photoId
-
-        viewModelScope.launch {
-            photoDetailResultsFlow
-                .collect {
-                    hiddenState.value = it
-                }
-        }
     }
 
     object Factory : ViewModelProvider.Factory {

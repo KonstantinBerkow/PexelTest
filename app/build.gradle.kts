@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.kotlin.coroutines.core)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.swiperefreshLayout)

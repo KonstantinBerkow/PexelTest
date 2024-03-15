@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.cache.DbPhoto
@@ -217,7 +218,7 @@ class PhotoDetailViewModel(
             }
             .logEach(TAG) { "next state: $it" }
             .logError(TAG) { "unhandled exception: $it" }
-            .asLiveData()
+            .asLiveData(context = viewModelScope.coroutineContext)
 
     fun getPhoto(photoId: Long) {
         savedStateHandle["photo_id"] = photoId

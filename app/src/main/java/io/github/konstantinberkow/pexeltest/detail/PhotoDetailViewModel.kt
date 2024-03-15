@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.konstantinberkow.pexeltest.app.PexelTestApp
 import io.github.konstantinberkow.pexeltest.cache.DbPhoto
@@ -19,12 +18,10 @@ import io.github.konstantinberkow.pexeltest.util.logEach
 import io.github.konstantinberkow.pexeltest.util.logError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.flow.stateIn
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
@@ -191,42 +188,36 @@ class PhotoDetailViewModel(
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val photoDetailResultsFlow = savedStateHandle.getStateFlow("photo_id", 0L)
-        .filter { it > 0 }
-        .logEach(TAG) { "next action: Load($it)" }
-        .flatMapLatest { photoId ->
-            flow {
-                val loading = PhotoDetailResult.Loading(photoId = photoId)
-                emit(loading)
-                emit(photoStore.loadFromDb(photoId))
-                emit(loading)
-                try {
-                    val freshData = pexelApi.getPhotoInfo(photoId)
-                    emit(PhotoDetailResult.Success(freshData.toPhotoDetail()))
-                    photoStore.savePhotoQuietly(freshData)
-                } catch (e: HttpException) {
-                    emit(PhotoDetailResult.Failure(errorMsg = "HTTP ${e.code()}"))
-                } catch (e: TimeoutException) {
-                    emit(PhotoDetailResult.Failure(errorMsg = "Timeout"))
-                } catch (e: IOException) {
-                    emit(PhotoDetailResult.Failure(errorMsg = e.message ?: "IO error"))
+    val exposedState: LiveData<PhotoDetailState> =
+        savedStateHandle.getStateFlow("photo_id", 0L)
+            .filter { it > 0 }
+            .logEach(TAG) { "next action: Load($it)" }
+            .flatMapLatest { photoId ->
+                flow {
+                    val loading = PhotoDetailResult.Loading(photoId = photoId)
+                    emit(loading)
+                    emit(photoStore.loadFromDb(photoId))
+                    emit(loading)
+                    try {
+                        val freshData = pexelApi.getPhotoInfo(photoId)
+                        emit(PhotoDetailResult.Success(freshData.toPhotoDetail()))
+                        photoStore.savePhotoQuietly(freshData)
+                    } catch (e: HttpException) {
+                        emit(PhotoDetailResult.Failure(errorMsg = "HTTP ${e.code()}"))
+                    } catch (e: TimeoutException) {
+                        emit(PhotoDetailResult.Failure(errorMsg = "Timeout"))
+                    } catch (e: IOException) {
+                        emit(PhotoDetailResult.Failure(errorMsg = e.message ?: "IO error"))
+                    }
                 }
             }
-        }
-        .logEach(TAG) { "next result: $it" }
-        .scan(PhotoDetailState.Initial as PhotoDetailState) { acc, result ->
-            acc.reduce(result)
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = PhotoDetailState.Initial
-        )
-        .logEach(TAG) { "next state: $it" }
-        .logError(TAG) { "unhandled exception: $it" }
-
-    val exposedState: LiveData<PhotoDetailState>
-        get() = photoDetailResultsFlow.asLiveData()
+            .logEach(TAG) { "next result: $it" }
+            .scan(PhotoDetailState.Initial as PhotoDetailState) { acc, result ->
+                acc.reduce(result)
+            }
+            .logEach(TAG) { "next state: $it" }
+            .logError(TAG) { "unhandled exception: $it" }
+            .asLiveData()
 
     fun getPhoto(photoId: Long) {
         savedStateHandle["photo_id"] = photoId
